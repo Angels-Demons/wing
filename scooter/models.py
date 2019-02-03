@@ -79,13 +79,13 @@ class Scooter(models.Model):
 
     # modify
     def turn_on(self):
-        sms_send.send_sms(self.phone_number, 'unlock')
+        # sms_send.send_sms(self.phone_number, 'unlock')
         sms.lock_unlock(self.phone_number, False, self.device_code)
         # sms_send.send_sms(9367498998, 'unlock')
 
     # modify
     def turn_off(self):
-        sms_send.send_sms(self.phone_number, 'lock')
+        # sms_send.send_sms(self.phone_number, 'lock')
         sms.lock_unlock(self.phone_number, True, self.device_code)
         # sms_send.send_sms(9367498998, 'lock')
 

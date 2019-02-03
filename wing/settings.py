@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'scooter',
     'ride',
 	'zarinpal',
+    'charging',
 	# 'river',
 
 ]

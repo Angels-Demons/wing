@@ -17,7 +17,7 @@ class UserAdmin(admin.ModelAdmin):
 
 
 class ProfileAdmin(admin.ModelAdmin):
-    list_display = ('user', 'credit', 'name', 'email')
+    list_display = ('user', 'credit', 'name', 'email', 'tariff')
 
 
 admin.site.register(User, UserAdmin)

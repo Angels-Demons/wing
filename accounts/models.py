@@ -4,6 +4,8 @@ from django.db import models
 from django.contrib import auth
 from django.core.exceptions import PermissionDenied
 
+from charging.models import Tariff
+
 
 def _user_has_perm(user, perm, obj):
     """
@@ -132,6 +134,7 @@ class Profile(models.Model):
     credit = models.SmallIntegerField(default=0)
     name = models.CharField(max_length=255)
     email = models.EmailField(default='abc@gmail.com')
+    tariff = models.ForeignKey(Tariff, on_delete=models.SET_DEFAULT, default=1)
 
     def __str__(self):
         return self.name + ' ' + str(self.user.phone)

@@ -8,8 +8,8 @@ from zeep import Client
 from accounts.models import User
 from zarinpal.models import Transaction
 
+# client = Client('https://www.zarinpal.com/pg/services/WebGate/wsdl')
 MERCHANT = '8f1d98e6-f9e5-11e8-868c-005056a205be'
-client = Client('https://www.zarinpal.com/pg/services/WebGate/wsdl')
 amount = 100  # Toman / Required
 description = "توضیحات مربوط به تراکنش را در این قسمت وارد کنید"  # Required
 email = 'email@example.com'  # Optional
@@ -19,6 +19,7 @@ CallbackURL = 'http://178.32.170.99/zarinpal/verify/' # Important: need to edit 
 
 
 def transaction_request(request):
+    client = Client('https://www.zarinpal.com/pg/services/WebGate/wsdl')
     amount = request.GET.get('amount')
     phone = request.GET.get('phone')
     transaction = Transaction(
@@ -44,6 +45,7 @@ def transaction_request(request):
 
 
 def transaction_verify(request):
+    client = Client('https://www.zarinpal.com/pg/services/WebGate/wsdl')
     authority = request.GET.get('Authority')
     transaction = get_object_or_404(Transaction, authority=authority)
     if request.GET.get('Status') == 'OK':

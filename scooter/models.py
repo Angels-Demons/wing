@@ -4,6 +4,7 @@ from api import sms_send, sms
 from django.db import models
 from accounts.models import User
 # from ride.models import Ride
+import geopy.distance
 
 from decimal import Decimal
 
@@ -63,13 +64,18 @@ class Scooter(models.Model):
             return Response(data, status=HTTP_400_BAD_REQUEST)
         # modify
         # really turn the device on here (via sms or net or whatever
+        if user.profile.credit < user.profile.tariff.minimum_credit:
+            data = {
+                # 'code': NOT_ENOUGH_CREDIT
+                'error': 'error: not enough credit'}
+            return Response(data, status=HTTP_200_OK)
+
         self.turn_on()
-        ride = Ride(user=user,
-                    scooter=self,
-                    start_point_latitude=self.latitude,
-                    start_point_longitude=self.longitude,
-                    is_finished=False)
-        ride.save()
+        # modify
+        # Here we don't take the credit off the wallet at start. We do it at the end
+        # user.profile.credit -= user.profile.tariff.initial_price
+        user.profile.save()
+        ride = Ride.initiate_ride(user=user, scooter=self)
         self.status = 2
         self.save()
         data = {'message': 'success: device activated',
@@ -139,13 +145,23 @@ class Ride(models.Model):
     price = models.PositiveSmallIntegerField(null=True)
     start_time = models.DateTimeField(auto_now_add=True)
     end_time = models.DateTimeField(null=True)
-    start_point_latitude = models.DecimalField(max_digits=9, decimal_places=6)
-    start_point_longitude = models.DecimalField(max_digits=9, decimal_places=6)
-    end_point_latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True)
-    end_point_longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True)
+    start_point_latitude = models.DecimalField(max_digits=9, decimal_places=6, verbose_name='start Lat')
+    start_point_longitude = models.DecimalField(max_digits=9, decimal_places=6, verbose_name='start Lng')
+    end_point_latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, verbose_name='end Lat')
+    end_point_longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, verbose_name='end Lng')
     is_finished = models.BooleanField(default=False)
-    # duration = models.TimeField(null=True)
-    # distance = models.SmallIntegerField(null=True)
+    duration = models.FloatField(null=True, verbose_name='duration(m)')
+    distance = models.SmallIntegerField(null=True, verbose_name='distance(km)')
+
+    @staticmethod
+    def initiate_ride(user, scooter,):
+        ride = Ride(user=user,
+                    scooter=scooter,
+                    start_point_latitude=scooter.latitude,
+                    start_point_longitude=scooter.longitude,
+                    is_finished=False)
+        ride.save()
+        return ride
 
     def __str__(self):
         return self.user.profile.name + " :" + str(self.scooter.device_code)
@@ -163,11 +179,14 @@ class Ride(models.Model):
         self.end_point_latitude = self.scooter.latitude
         self.end_point_longitude = self.scooter.longitude
         self.end_time = datetime.datetime.now()
+        self.distance = self.get_distance_in_kilometers()
+        self.duration = self.get_duration_in_minutes()
         self.save()
-        self.price = funcs.price(self)
+        # modify
+        # charge = True means it calculates the price at the end and charges the user
+        price = self.set_price_charge(True)
         self.is_finished = True
         self.save()
-        self.user.profile.credit -= self.price
         self.user.profile.save()
         self.scooter.status = 1
         self.scooter.save()
@@ -177,10 +196,44 @@ class Ride(models.Model):
                 }
         return Response(data, status=HTTP_200_OK)
 
-    def get_duration(self):
+    def get_duration_in_seconds(self):
         # print(datetime.datetime.now() - self.start_time)
         # return datetime.datetime.now(tz=None) - self.start_time
         time_delta = datetime.timedelta(minutes=1, seconds=10)
-        t_delta = (datetime.datetime.now().replace(tzinfo=None) - self.start_time.replace(tzinfo=None)).seconds
-        print(t_delta)
+        t_delta = (datetime.datetime.now().replace(tzinfo=None) - self.start_time.replace(tzinfo=None)).seconds - 210*60
+        # print(t_delta)
         return t_delta
+
+    def get_duration_in_minutes(self):
+        return self.get_duration_in_seconds()/60
+
+    def get_distance_in_kilometers(self):
+        start_point = (self.start_point_latitude, self.start_point_longitude)
+        end_point = (self.end_point_latitude, self.end_point_longitude)
+        distance = geopy.distance.vincenty(start_point, end_point).km
+        return distance
+
+    def set_price_charge(self, charge=False):
+        tariff = self.user.profile.tariff
+        price = tariff.initial_price
+        if self.duration > tariff.free_minutes:
+            price += (self.duration - tariff.free_minutes) * tariff.per_minute_price
+        if self.distance > tariff.free_kilometers:
+            price += (self.distance - tariff.free_kilometers) * tariff.per_kilometer_price
+        # print('price:')
+        # print(tariff.per_minute_price)
+        # print(tariff.per_kilometer_price)
+        # print(self.get_duration_in_minutes())
+        # print(self.get_duration_in_seconds())
+        # print(self.get_distance_in_kilometers())
+        # print()
+        # print(tariff.initial_price)
+        # print(self.get_duration_in_minutes() * tariff.per_minute_price)
+        # print(self.get_distance_in_kilometers() * tariff.per_kilometer_price)
+        # print(price)
+        # print()
+        self.price = price
+        self.save()
+        if charge:
+            self.user.profile.credit -= price
+        return price

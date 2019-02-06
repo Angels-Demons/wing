@@ -24,7 +24,7 @@ class ProfileSerializer(serializers.ModelSerializer):
             ride = Ride.objects.filter(user=profile.instance.user, is_finished=False).first()
         if ride:
             self.ride_id = ride.id
-            self.timer = ride.get_duration()
+            self.timer = ride.get_duration_in_seconds()
             return True
         else:
             self.ride_id = None

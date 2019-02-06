@@ -37,8 +37,10 @@ class RegisterView(APIView):
         else:
             # print('new user')
             user = manager.create_user(phone, password)
+            # modify
+            # you can set the tariff_id here
             profile = create_profile(user)
-        sms_send.send_sms(phone, password)
+        # sms_send.send_sms(phone, password)
         sms.verify(phone, password)
 
         return Response({'success': 'success'},

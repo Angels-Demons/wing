@@ -123,8 +123,10 @@ class User(AbstractBaseUser, PermissionsMixin):
         return _user_has_module_perms(self, app_label)
 
 
-def create_profile(user):
+def create_profile(user, tariff_id=1):
     profile = Profile(user=user)
+    profile.tariff_id = tariff_id
+    profile.credit = profile.tariff.initial_credit
     profile.save()
     return profile
 

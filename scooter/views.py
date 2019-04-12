@@ -102,15 +102,17 @@ def end_ride_mobile_api(request):
     user = authenticate(request)
     if not isinstance(user, User):
         return user
-    ride_id = request.POST['ride_id']
-    print(ride_id)
-    print(type(ride_id))
 
-    ride = Ride.objects.get(pk=ride_id)
+    # ride_id = request.POST['ride_id']
+    # print(ride_id)
+    # print(type(ride_id))
+    # ride = Ride.objects.get(pk=ride_id)
+    # if not ride.user == user:
+    #     data = {'error': 'error: you can only end your own ride'}
+    #     return Response(data, status=HTTP_400_BAD_REQUEST)
 
-    if not ride.user == user:
-        data = {'error': 'error: you can only end your own ride'}
-        return Response(data, status=HTTP_400_BAD_REQUEST)
+    ride = Ride.objects.get(user=user, is_finished=False)
+
     return ride.end_ride()
 
 

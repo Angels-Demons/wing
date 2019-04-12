@@ -1,5 +1,7 @@
 import datetime
 
+from pytz import UTC
+
 from api import sms_send, sms
 from django.db import models
 from accounts.models import User
@@ -197,11 +199,24 @@ class Ride(models.Model):
         return Response(data, status=HTTP_200_OK)
 
     def get_duration_in_seconds(self):
+        # t_delta = (datetime.datetime.now().replace(tzinfo=None) - self.start_time.replace(tzinfo=None)).seconds
+        t_delta = (datetime.datetime.now() - self.start_time).seconds
+
+        debug = False
         # print(datetime.datetime.now() - self.start_time)
         # return datetime.datetime.now(tz=None) - self.start_time
         time_delta = datetime.timedelta(minutes=1, seconds=10)
-        t_delta = (datetime.datetime.now().replace(tzinfo=None) - self.start_time.replace(tzinfo=None)).seconds - 210*60
-        # print(t_delta)
+        if debug:
+            print("\n--------")
+            print(datetime.datetime.now())
+            print(datetime.datetime.now().replace(tzinfo=None))
+            print(datetime.datetime.now().replace(tzinfo=UTC))
+
+            print(self.start_time)
+            print(self.start_time.replace(tzinfo=None))
+            print(self.start_time.replace(tzinfo=UTC))
+            print("--------\n")
+            print(t_delta)
         return t_delta
 
     def get_duration_in_minutes(self):

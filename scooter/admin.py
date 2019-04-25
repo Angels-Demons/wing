@@ -4,11 +4,13 @@ from scooter.models import Scooter, Site, Ride, Announcement
 
 
 class AnnouncementAdmin(admin.ModelAdmin):
-    list_display = ('scooter', 'time', 'latitude', 'longitude', 'battery', 'status')
+    list_display = ('scooter', 'time', 'latitude', 'longitude', 'battery', 'device_status')
 
 
 class ScooterAdmin(admin.ModelAdmin):
-    list_display = ('phone_number', 'device_code', 'qr_info', 'latitude', 'longitude', 'site', 'battery', 'status', 'activation_date', 'last_announce')
+    list_display = ('phone_number', 'device_code', 'qr_info', 'latitude', 'longitude', 'site', 'battery', 'status',
+                    'device_status',
+                    'activation_date', 'last_announce')
 
 
 class RideAdmin(admin.ModelAdmin):

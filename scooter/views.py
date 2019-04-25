@@ -1,6 +1,8 @@
 import datetime
 import random
+import time
 
+from django.shortcuts import get_object_or_404
 from rest_framework.permissions import AllowAny
 
 from accounts.models import User
@@ -18,8 +20,12 @@ from rest_framework.status import (
 
 # from ride.models import Ride
 from scooter.Serializers import ScooterSerializer, ScooterAnnounceSerializer, ProfileSerializer
-from scooter import funcs
+# from scooter import funcs
 from scooter.models import Scooter, Ride, Announcement
+import logging
+
+MAXIMUM_RETRIES = 0
+SLEEP_TIME = 1
 
 
 def authenticate(request):
@@ -43,7 +49,8 @@ def authenticate(request):
 @permission_classes((AllowAny,))
 def announce_api(request):
     device_code = request.GET['device_code']
-    scooter = Scooter.objects.get(device_code=device_code)
+    # scooter = Scooter.objects.get(device_code=device_code)
+    scooter = get_object_or_404(Scooter, device_code=device_code)
     # return scooter.announce(request)
 
     data = request.GET.copy()
@@ -57,7 +64,7 @@ def announce_api(request):
             latitude=scooter.latitude,
             longitude=scooter.longitude,
             battery=scooter.battery,
-            status=scooter.status,
+            device_status=scooter.device_status,
         )
         announcement.save()
 
@@ -98,6 +105,37 @@ def start_ride_mobile_api(request):
 
 @csrf_exempt
 @api_view(["POST"])
+def verify_ride_mobile_api(request):
+    user = authenticate(request)
+    if not isinstance(user, User):
+        return user
+    # ride = Ride.objects.get(user=user, is_finished=False)
+    ride = get_object_or_404(Ride, user=user, is_finished=False)
+    retries = 0
+    while True:
+        # print(ride.scooter.device_status)
+        if ride.scooter.device_status == 2:
+            data = {'message': 'success: device activated',
+                    # 'device_id': device_id
+                    'activated': True,
+                    'timer': ride.get_duration_in_seconds()
+                    }
+            return Response(data, status=HTTP_200_OK)
+        else:
+            if retries >= MAXIMUM_RETRIES:
+                data = {'message': 'failure: device not activated',
+                        # 'device_id': device_id
+                        'activated': False
+                        }
+                return Response(data, status=HTTP_200_OK)
+            time.sleep(SLEEP_TIME)
+            retries += 1
+            print("waiting for scooter request ...\tnumber of retries: " + str(retries))
+            logging.info("waiting for scooter request ...\tnumber of retries: " + str(retries))
+
+
+@csrf_exempt
+@api_view(["POST"])
 def end_ride_mobile_api(request):
     user = authenticate(request)
     if not isinstance(user, User):
@@ -111,8 +149,8 @@ def end_ride_mobile_api(request):
     #     data = {'error': 'error: you can only end your own ride'}
     #     return Response(data, status=HTTP_400_BAD_REQUEST)
 
-    ride = Ride.objects.get(user=user, is_finished=False)
-
+    # ride = Ride.objects.get(user=user, is_finished=False)
+    ride = get_object_or_404(Ride, user=user, is_finished=False)
     return ride.end_ride()
 
 

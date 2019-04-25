@@ -7,6 +7,7 @@ from django.db import models
 from accounts.models import User
 # from ride.models import Ride
 import geopy.distance
+from django.core.validators import MinValueValidator
 
 from decimal import Decimal
 
@@ -49,8 +50,9 @@ class Scooter(models.Model):
     latitude = models.DecimalField(max_digits=9, decimal_places=6)
     longitude = models.DecimalField(max_digits=9, decimal_places=6)
     site = models.ForeignKey(Site, on_delete=models.CASCADE)
-    battery = models.PositiveSmallIntegerField()
+    battery = models.PositiveSmallIntegerField(validators=[MinValueValidator(0)])
     status = models.PositiveSmallIntegerField(choices=Choices.scooter_status_choices)
+    device_status = models.PositiveSmallIntegerField(choices=Choices.scooter_status_choices, default=1)
     activation_date = models.DateTimeField(auto_now_add=True)
     last_announce = models.DateTimeField(null=True, blank=True)
 
@@ -137,8 +139,10 @@ class Announcement(models.Model):
     time = models.DateTimeField(auto_now_add=True)
     latitude = models.DecimalField(max_digits=9, decimal_places=6)
     longitude = models.DecimalField(max_digits=9, decimal_places=6)
-    battery = models.PositiveSmallIntegerField()
-    status = models.PositiveSmallIntegerField(choices=Choices.scooter_status_choices)
+    battery = models.PositiveSmallIntegerField(validators=[MinValueValidator(0)])
+    device_status = models.PositiveSmallIntegerField(choices=Choices.scooter_status_choices)
+#     modify
+#     def create(self):
 
 
 class Ride(models.Model):

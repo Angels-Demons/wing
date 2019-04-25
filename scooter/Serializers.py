@@ -45,4 +45,4 @@ class ScooterSerializer(serializers.ModelSerializer):
 class ScooterAnnounceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Scooter
-        fields = ['latitude', 'longitude', 'battery']
+        fields = ['latitude', 'longitude', 'battery', 'device_status']

@@ -43,7 +43,7 @@ def _user_has_module_perms(user, app_label):
 
 class UserManager(BaseUserManager):
 
-    def create_user(self, phone, password=None, is_staff=False, is_admin=False, is_active=True):
+    def create_user(self, phone, password=None, is_staff=False, is_admin=False, is_active=True, is_superuser=False):
         if not phone:
             raise ValueError("Users must have a phone number")
         if not password:
@@ -63,7 +63,8 @@ class UserManager(BaseUserManager):
             phone=phone,
             is_admin=is_admin,
             is_staff=is_staff,
-            is_active=is_active)
+            is_active=is_active,
+            is_superuser=is_superuser)
         user_obj.set_password(password)
         user_obj.save(using=self._db)
         return user_obj
@@ -77,7 +78,8 @@ class UserManager(BaseUserManager):
         user = self.create_user(phone,
                                 password=password,
                                 is_staff=True,
-                                is_admin=True)
+                                is_admin=True,
+                                is_superuser=True)
 
 
 class User(AbstractBaseUser, PermissionsMixin):

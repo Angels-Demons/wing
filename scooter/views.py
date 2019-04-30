@@ -160,7 +160,6 @@ def my_profile_api(request):
     user = authenticate(request)
     if not isinstance(user, User):
         return user
-
     # return MyStateSerializer.make_my_state(user.profile)
     return Response(ProfileSerializer(user.profile).data)
 

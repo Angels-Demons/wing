@@ -8,9 +8,10 @@ class AnnouncementAdmin(admin.ModelAdmin):
 
 
 class ScooterAdmin(admin.ModelAdmin):
-    list_display = ('phone_number', 'device_code', 'qr_info', 'latitude', 'longitude', 'site', 'battery', 'status',
+    list_display = ('phone_number', 'device_code', 'latitude', 'longitude', 'site', 'battery', 'status',
                     'device_status',
-                    'activation_date', 'last_announce')
+                    'qr_info',
+                    'last_announce', 'activation_date')
 
 
 class RideAdmin(admin.ModelAdmin):

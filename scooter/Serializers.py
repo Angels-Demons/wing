@@ -38,13 +38,14 @@ class ProfileSerializer(serializers.ModelSerializer):
             return False
 
     def get_ride_is_verified(self, profile):
-        if isinstance(profile, Profile):
-            print("is instance of profile")
-            ride = get_object_or_404(Ride, user=profile.user, is_finished=False)
-        else:
-            print("is not instance of profile")
-            ride = get_object_or_404(Ride, user=profile.instance.user, is_finished=False)
-        if ride.scooter.device_status == 2:
+        # if isinstance(profile, Profile):
+        #     print("is instance of profile")
+        #     ride = get_object_or_404(Ride, user=profile.user, is_finished=False)
+        # else:
+        #     print("is not instance of profile")
+        #     ride = get_object_or_404(Ride, user=profile.instance.user, is_finished=False)
+        ride = Ride.objects.filter(user=profile.user, is_finished=False).first()
+        if ride and ride.scooter.device_status == 2:
             return True
         return False
 

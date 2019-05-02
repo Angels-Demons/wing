@@ -23,6 +23,7 @@ from scooter.Serializers import ScooterSerializer, ScooterAnnounceSerializer, Pr
 # from scooter import funcs
 from scooter.models import Scooter, Ride, Announcement
 import logging
+from django.db.models import Q
 
 MAXIMUM_RETRIES = 0
 SLEEP_TIME = 1
@@ -95,11 +96,17 @@ def start_ride_mobile_api(request):
     user = authenticate(request)
     if not isinstance(user, User):
         return user
-    qr_info = request.POST['qr_info']
-    scooter = Scooter.objects.filter(qr_info=qr_info).first()
-    if not scooter:
-        data = {'error': 'error: not a valid qr code'}
-        return Response(data, status=HTTP_404_NOT_FOUND)
+    try:
+        qr_info = request.POST['qr_info']
+        scooter = get_object_or_404(Scooter, qr_info=qr_info)
+    except:
+        device_code = request.POST['device_code']
+        scooter = get_object_or_404(Scooter, device_code=device_code)
+    # scooter = Scooter.objects.filter(Q(qr_info=qr_info) or Q(device_code=device_code)).first()
+    # scooter = get_object_or_404(Scooter, Q(qr_info=qr_info) or Q(device_code=device_code))
+    # if not scooter:
+    #     data = {'error': 'error: not a valid qr code'}
+    #     return Response(data, status=HTTP_404_NOT_FOUND)
     return scooter.start_ride(user=user)
 
 

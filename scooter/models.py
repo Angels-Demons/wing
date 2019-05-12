@@ -2,7 +2,7 @@ import datetime
 
 from pytz import UTC
 
-from api import sms_send, sms
+from api import sms_send, sms, mqtt
 from django.db import models
 from accounts.models import User
 # from ride.models import Ride
@@ -91,12 +91,14 @@ class Scooter(models.Model):
     def turn_on(self):
         # sms_send.send_sms(self.phone_number, 'unlock')
         sms.lock_unlock(self.phone_number, False, self.device_code)
+        mqtt.send_mqtt('scooter/' + str(self.phone_number), 'unlock')
         # sms_send.send_sms(9367498998, 'unlock')
 
     # modify
     def turn_off(self):
         # sms_send.send_sms(self.phone_number, 'lock')
         sms.lock_unlock(self.phone_number, True, self.device_code)
+        mqtt.send_mqtt('scooter/' + str(self.phone_number), 'lock')
         # sms_send.send_sms(9367498998, 'lock')
 
     # def announce(self, request):

@@ -71,7 +71,11 @@ def announce_api(request):
 
         scooter.last_announce = announcement.time
         scooter.save()
-        return Response('announced', status=HTTP_200_OK)
+        data = {'message': 'success: announce received',
+                'status': scooter.status,
+                }
+        return Response(data, status=HTTP_200_OK)
+        # return Response('announced', status=HTTP_200_OK)
 
     else:
         print(instance.errors)

@@ -60,6 +60,13 @@ def announce_api(request):
     if instance.is_valid():
         # print('valid announcement')
         instance.save()
+        try:
+            ride = Ride.objects.get(scooter=scooter, is_finished=False)
+            if ride and ride.start_acknowledge_time.__eq__(None) and ride.scooter.device_status == ride.scooter.status:
+                ride.start_acknowledge_time = datetime.datetime.now()
+                ride.save()
+        except:
+            pass
         announcement = Announcement(
             scooter=scooter,
             latitude=scooter.latitude,

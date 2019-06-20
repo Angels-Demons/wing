@@ -91,14 +91,14 @@ class Scooter(models.Model):
     def turn_on(self):
         # sms_send.send_sms(self.phone_number, 'unlock')
         mqtt.send_mqtt('scooter/' + str(self.phone_number), 'unlock')
-        sms.lock_unlock(self.phone_number, False, self.device_code)
+        # sms.lock_unlock(self.phone_number, False, self.device_code)
         # sms_send.send_sms(9367498998, 'unlock')
 
     # modify
     def turn_off(self):
         # sms_send.send_sms(self.phone_number, 'lock')
         mqtt.send_mqtt('scooter/' + str(self.phone_number), 'lock')
-        sms.lock_unlock(self.phone_number, True, self.device_code)
+        # sms.lock_unlock(self.phone_number, True, self.device_code)
         # sms_send.send_sms(9367498998, 'lock')
 
     # def announce(self, request):
@@ -148,18 +148,20 @@ class Announcement(models.Model):
 
 
 class Ride(models.Model):
-    scooter = models.ForeignKey(Scooter, on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    price = models.PositiveSmallIntegerField(null=True)
-    start_time = models.DateTimeField(auto_now_add=True)
-    end_time = models.DateTimeField(null=True)
-    start_point_latitude = models.DecimalField(max_digits=9, decimal_places=6, verbose_name='start Lat')
-    start_point_longitude = models.DecimalField(max_digits=9, decimal_places=6, verbose_name='start Lng')
-    end_point_latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, verbose_name='end Lat')
-    end_point_longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, verbose_name='end Lng')
+    scooter = models.ForeignKey(Scooter, on_delete=models.CASCADE, editable=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, editable=False)
+    price = models.PositiveSmallIntegerField(null=True, editable=False, blank=True)
+    start_time = models.DateTimeField(auto_now_add=True, editable=False)
+    start_acknowledge_time = models.DateTimeField(null=True, editable=False, verbose_name='start ack')
+    end_time = models.DateTimeField(null=True, editable=False)
+    end_acknowledge_time = models.DateTimeField(null=True, editable=False, verbose_name='end ack')
+    start_point_latitude = models.DecimalField(max_digits=9, decimal_places=6, verbose_name='start Lat', editable=False, blank=True)
+    start_point_longitude = models.DecimalField(max_digits=9, decimal_places=6, verbose_name='start Lng', editable=False)
+    end_point_latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, verbose_name='end Lat', editable=False)
+    end_point_longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, verbose_name='end Lng', editable=False)
     is_finished = models.BooleanField(default=False)
-    duration = models.FloatField(null=True, verbose_name='duration(m)')
-    distance = models.SmallIntegerField(null=True, verbose_name='distance(km)')
+    duration = models.FloatField(null=True, verbose_name='duration(m)', editable=False)
+    distance = models.SmallIntegerField(null=True, verbose_name='distance(km)', editable=False)
 
     @staticmethod
     def initiate_ride(user, scooter,):
@@ -206,7 +208,13 @@ class Ride(models.Model):
 
     def get_duration_in_seconds(self):
         # t_delta = (datetime.datetime.now().replace(tzinfo=None) - self.start_time.replace(tzinfo=None)).seconds
-        t_delta = (datetime.datetime.now() - self.start_time).seconds
+        # modify : this is always true. why?
+        if self.start_acknowledge_time.__eq__(None):
+            print(self.start_acknowledge_time)
+            print('ride started but not acknowledged: return 0 for timer')
+            return 0
+        print('ride started but and acknowledged: return real time for timer')
+        t_delta = (datetime.datetime.now() - self.start_acknowledge_time).seconds
 
         debug = False
         # print(datetime.datetime.now() - self.start_time)

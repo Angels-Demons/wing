@@ -31,16 +31,16 @@ def send_mqtt(topic, message):
     #  client.loop_forever()
 
 
-client = mqtt.Client()
-client.on_connect = on_connect
-client.on_message = on_message
-# client.username_pw_set(username="amirreza",password="amirreza")
-client.connect("5.253.27.84")
-
-# client.publish(topic, message)
-client.subscribe('scooter/9367498998')
-# Blocking call that processes network traffic, dispatches callbacks and
-# handles reconnecting.
-# Other loop*() functions are available that give a threaded interface and a
-# manual interface.
-client.loop_forever()
+# client = mqtt.Client()
+# client.on_connect = on_connect
+# client.on_message = on_message
+# # client.username_pw_set(username="amirreza",password="amirreza")
+# client.connect("5.253.27.84")
+#
+# # client.publish(topic, message)
+# client.subscribe('scooter/9367498998')
+# # Blocking call that processes network traffic, dispatches callbacks and
+# # handles reconnecting.
+# # Other loop*() functions are available that give a threaded interface and a
+# # manual interface.
+# client.loop_forever()

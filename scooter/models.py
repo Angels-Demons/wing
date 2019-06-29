@@ -78,9 +78,12 @@ class Scooter(models.Model):
         # modify
         # Here we don't take the credit off the wallet at start. We do it at the end
         # user.profile.credit -= user.profile.tariff.initial_price
-        user.profile.save()
+        # user.profile.save()
         ride = Ride.initiate_ride(user=user, scooter=self)
         self.status = 2
+        # modify
+        # here: add scooter to the transient que
+        # (a wait list for response of scooter and maybe reversing the transaction)
         self.save()
         data = {'message': 'success: device activated',
                 # 'device_id': device_id,
@@ -89,17 +92,13 @@ class Scooter(models.Model):
 
     # modify
     def turn_on(self):
-        # sms_send.send_sms(self.phone_number, 'unlock')
+        sms.lock_unlock(self.phone_number, False, self.device_code)
         mqtt.send_mqtt('scooter/' + str(self.phone_number), 'unlock')
-        # sms.lock_unlock(self.phone_number, False, self.device_code)
-        # sms_send.send_sms(9367498998, 'unlock')
 
     # modify
     def turn_off(self):
-        # sms_send.send_sms(self.phone_number, 'lock')
+        sms.lock_unlock(self.phone_number, True, self.device_code)
         mqtt.send_mqtt('scooter/' + str(self.phone_number), 'lock')
-        # sms.lock_unlock(self.phone_number, True, self.device_code)
-        # sms_send.send_sms(9367498998, 'lock')
 
     # def announce(self, request):
     #     # update self with new info
@@ -209,11 +208,12 @@ class Ride(models.Model):
     def get_duration_in_seconds(self):
         # t_delta = (datetime.datetime.now().replace(tzinfo=None) - self.start_time.replace(tzinfo=None)).seconds
         # modify : this is always true. why?
-        if self.start_acknowledge_time.__eq__(None):
-            print(self.start_acknowledge_time)
-            print('ride started but not acknowledged: return 0 for timer')
+        print(self.start_acknowledge_time)
+        if self.start_acknowledge_time is None:
+            # print(self.start_acknowledge_time)
+            # print('ride started but not acknowledged: return 0 for timer')
             return 0
-        print('ride started but and acknowledged: return real time for timer')
+        # print('ride started and acknowledged: return real time for timer')
         t_delta = (datetime.datetime.now() - self.start_acknowledge_time).seconds
 
         debug = False

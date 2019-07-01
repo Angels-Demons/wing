@@ -11,6 +11,10 @@ class ProfileSerializer(serializers.ModelSerializer):
     ride_is_verified = serializers.SerializerMethodField()
     ride_id = serializers.SerializerMethodField()
     timer = serializers.SerializerMethodField()
+    battery = serializers.SerializerMethodField()
+
+    def get_battery(self, profile):
+        return self.battery
 
     def get_ride_id(self, profile):
         return self.ride_id
@@ -31,10 +35,12 @@ class ProfileSerializer(serializers.ModelSerializer):
         if ride:
             self.ride_id = ride.id
             self.timer = ride.get_duration_in_seconds()
+            self.battery = ride.scooter.battery
             return True
         else:
             self.ride_id = None
             self.timer = "0"
+            self.battery = 0
             return False
 
     def get_ride_is_verified(self, profile):
@@ -51,7 +57,7 @@ class ProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
             model = Profile
-            fields = ['is_riding', 'ride_is_verified', 'credit', 'ride_id', 'timer']
+            fields = ['is_riding', 'ride_is_verified', 'credit', 'ride_id', 'timer', 'battery']
 
 
 class ScooterSerializer(serializers.ModelSerializer):

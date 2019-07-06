@@ -74,7 +74,6 @@ class Scooter(models.Model):
                 'error': 'error: not enough credit'}
             return Response(data, status=HTTP_200_OK)
 
-        self.turn_on()
         # modify
         # Here we don't take the credit off the wallet at start. We do it at the end
         # user.profile.credit -= user.profile.tariff.initial_price
@@ -85,6 +84,7 @@ class Scooter(models.Model):
         # here: add scooter to the transient que
         # (a wait list for response of scooter and maybe reversing the transaction)
         self.save()
+        self.turn_on()
         data = {'message': 'success: device activated',
                 # 'device_id': device_id,
                 'ride_id': ride.id}
@@ -184,7 +184,6 @@ class Ride(models.Model):
             return Response(data, status=HTTP_400_BAD_REQUEST)
         # modify
         # really turn the device off here!
-        self.scooter.turn_off()
         self.end_point_latitude = self.scooter.latitude
         self.end_point_longitude = self.scooter.longitude
         self.end_time = datetime.datetime.now()
@@ -199,6 +198,7 @@ class Ride(models.Model):
         self.user.profile.save()
         self.scooter.status = 1
         self.scooter.save()
+        self.scooter.turn_off()
         data = {'message': 'success: device deactivated',
                 # 'device_id': device_id
                 'ride_id': self.id

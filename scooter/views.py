@@ -109,7 +109,7 @@ def nearby_devices_mobile_api(request):
     latitude = request.POST['latitude']
     longitude = request.POST['longitude']
     radius = request.POST['radius']
-    return Response(ScooterSerializer(Scooter.nearby_devices(latitude, longitude, radius), many=True).data)
+    return Response(ScooterSerializer(Scooter.nearby_devices(latitude, longitude, radius, user), many=True).data)
 
 
 @csrf_exempt

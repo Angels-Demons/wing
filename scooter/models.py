@@ -125,9 +125,13 @@ class Scooter(models.Model):
     #         return Response('announcement not valid', status=HTTP_400_BAD_REQUEST)
 
     @staticmethod
-    def nearby_devices(latitude, longitude, radius):
-        scooters = Scooter.objects.all()
+    def nearby_devices(latitude, longitude, radius, user):
         nearby = []
+        ride = Ride.objects.filter(user=user, is_finished=False).first()
+        if ride:
+            nearby.append(ride.scooter)
+            return nearby
+        scooters = Scooter.objects.all()
         for scooter in scooters:
             if abs((scooter.latitude + scooter.longitude) - (Decimal(latitude) + Decimal(longitude))) < 2 * Decimal(
                     radius):

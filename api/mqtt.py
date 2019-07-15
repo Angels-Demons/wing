@@ -21,7 +21,6 @@ def send_mqtt(topic, message):
     client.on_message = on_message
     # client.username_pw_set(username="amirreza",password="amirreza")
     client.connect("5.253.27.84")
-
     client.publish(topic, message)
     # client.subscribe('test')
     # Blocking call that processes network traffic, dispatches callbacks and

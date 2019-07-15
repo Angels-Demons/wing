@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'zarinpal',
     'charging',
     # 'river',
+    'background_task',
 
 ]
 

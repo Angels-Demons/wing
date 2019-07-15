@@ -1,5 +1,6 @@
 import datetime
 
+from background_task import background
 from pytz import UTC
 
 from api import sms_send, sms, mqtt
@@ -88,6 +89,9 @@ class Scooter(models.Model):
         data = {'message': 'success: device activated',
                 # 'device_id': device_id,
                 'ride_id': ride.id}
+        print("before func")
+        ride.reverse_started_ride(ride.id)
+        print("after func")
         return Response(data, status=HTTP_200_OK)
 
     # modify
@@ -165,6 +169,7 @@ class Ride(models.Model):
     is_finished = models.BooleanField(default=False)
     duration = models.FloatField(null=True, verbose_name='duration(m)', editable=False)
     distance = models.SmallIntegerField(null=True, verbose_name='distance(km)', editable=False)
+    is_reversed = models.BooleanField(default=False, editable=False)
 
     @staticmethod
     def initiate_ride(user, scooter,):
@@ -179,7 +184,7 @@ class Ride(models.Model):
     def __str__(self):
         return self.user.profile.name + " :" + str(self.scooter.device_code)
 
-    def end_ride(self):
+    def end_ride(self, is_reversed=False):
         if self.is_finished:
             data = {'error': 'error: ride is finished'}
             return Response(data, status=HTTP_400_BAD_REQUEST)
@@ -193,10 +198,11 @@ class Ride(models.Model):
         self.end_time = datetime.datetime.now()
         self.distance = self.get_distance_in_kilometers()
         self.duration = self.get_duration_in_minutes()
+        self.is_reversed = is_reversed
         self.save()
         # modify
         # charge = True means it calculates the price at the end and charges the user
-        price = self.set_price_charge(True)
+        price = self.set_price_charge(charge=not is_reversed)
         self.is_finished = True
         self.save()
         self.user.profile.save()
@@ -265,8 +271,19 @@ class Ride(models.Model):
         # print(self.get_distance_in_kilometers() * tariff.per_kilometer_price)
         # print(price)
         # print()
-        self.price = price
-        self.save()
         if charge:
+            self.price = price
             self.user.profile.credit -= price
-        return price
+        else:
+            self.price = 0
+        self.save()
+        return self.price
+
+    @staticmethod
+    @background(schedule=30)
+    def reverse_started_ride(ride_id):
+        # print("====== reversing initiated")
+        ride = Ride.objects.get(pk=ride_id)
+        if ride.start_acknowledge_time is None:
+            print("ride reversed due to no response from device")
+            ride.end_ride(is_reversed=True)

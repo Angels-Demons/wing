@@ -19,7 +19,7 @@ from rest_framework.status import (
 )
 
 # from ride.models import Ride
-from scooter.Serializers import ScooterSerializer, ScooterAnnounceSerializer, ProfileSerializer
+from scooter.Serializers import ScooterSerializer, ScooterAnnounceSerializer, ProfileSerializer, ScooterAnnounceSerializerFakeLocation
 # from scooter import funcs
 from scooter.models import Scooter, Ride, Announcement
 import logging
@@ -56,7 +56,12 @@ def announce_api(request):
 
     data = request.GET.copy()
     del data['device_code']
-    instance = ScooterAnnounceSerializer(instance=scooter, data=data)
+    if data['latitude'] == '0' and data['longitude'] == '0':
+        # print("got 0 coordinates")
+        instance = ScooterAnnounceSerializerFakeLocation(instance=scooter, data=data)
+    else:
+        instance = ScooterAnnounceSerializer(instance=scooter, data=data)
+
     if instance.is_valid():
         # print('valid announcement')
         instance.save()

@@ -96,12 +96,12 @@ class Scooter(models.Model):
 
     # modify
     def turn_on(self):
-        sms.lock_unlock(self.phone_number, False, self.device_code)
+        # sms.lock_unlock(self.phone_number, False, self.device_code)
         mqtt.send_mqtt('scooter/' + str(self.phone_number), 'unlock')
 
     # modify
     def turn_off(self):
-        sms.lock_unlock(self.phone_number, True, self.device_code)
+        # sms.lock_unlock(self.phone_number, True, self.device_code)
         mqtt.send_mqtt('scooter/' + str(self.phone_number), 'lock')
 
     # def announce(self, request):
@@ -199,13 +199,12 @@ class Ride(models.Model):
         self.distance = self.get_distance_in_kilometers()
         self.duration = self.get_duration_in_minutes()
         self.is_reversed = is_reversed
-        self.save()
         # modify
         # charge = True means it calculates the price at the end and charges the user
         price = self.set_price_charge(charge=not is_reversed)
         self.is_finished = True
         self.save()
-        self.user.profile.save()
+        # self.user.profile.save()
         self.scooter.status = 1
         self.scooter.save()
         self.scooter.turn_off()
@@ -274,6 +273,7 @@ class Ride(models.Model):
         if charge:
             self.price = price
             self.user.profile.credit -= price
+            self.user.profile.save()
         else:
             self.price = 0
         self.save()

@@ -15,7 +15,7 @@ description = "توضیحات مربوط به تراکنش را در این قس
 email = 'email@example.com'  # Optional
 mobile = '09123456789'  # Optional
 # CallbackURL = reverse_lazy('verify') # Important: need to edit for realy server.
-CallbackURL = 'http://178.32.170.99/zarinpal/verify/' # Important: need to edit for realy server.
+CallbackURL = 'http://5.253.27.84/zarinpal/verify/' # Important: need to edit for realy server.
 
 
 def transaction_request(request):

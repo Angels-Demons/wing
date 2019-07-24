@@ -70,3 +70,9 @@ class ScooterAnnounceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Scooter
         fields = ['latitude', 'longitude', 'battery', 'device_status']
+
+
+class ScooterAnnounceSerializerFakeLocation(serializers.ModelSerializer):
+    class Meta:
+        model = Scooter
+        fields = ['battery', 'device_status']

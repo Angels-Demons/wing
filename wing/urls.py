@@ -20,5 +20,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('accounts.urls')),
     path('scooter/', include('scooter.urls')),
-	path('zarinpal/', include('zarinpal.urls')),
+    path('zarinpal/', include('zarinpal.urls')),
+    # path('websocket/', include('example.urls')),
 ]

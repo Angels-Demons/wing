@@ -89,9 +89,9 @@ class Scooter(models.Model):
         data = {'message': 'success: device activated',
                 # 'device_id': device_id,
                 'ride_id': ride.id}
-        print("before func")
+        # print("before func")
         ride.reverse_started_ride(ride.id)
-        print("after func")
+        # print("after func")
         return Response(data, status=HTTP_200_OK)
 
     # modify

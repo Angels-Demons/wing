@@ -53,8 +53,22 @@ INSTALLED_APPS = [
     'charging',
     # 'river',
     'background_task',
-
+    # 'channels',
 ]
+
+# added : web socket
+# ASGI_APPLICATION = 'wing.routing.application'
+# CHANNEL_LAYERS = {
+#     'default': {
+#         'BACKEND': 'channels_redis.core.RedisChannelLayer',
+#         'CONFIG': {
+#             'hosts': [('localhost', 6379)],
+#         },
+#         'ROUTING': 'wing.routing.channel_routing',
+#     }
+# }
+
+# ASGI_APPLICATION = 'wing.asgi.application'
 
 # added
 REST_FRAMEWORK = {

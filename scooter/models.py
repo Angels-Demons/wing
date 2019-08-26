@@ -56,6 +56,8 @@ class Scooter(models.Model):
     device_status = models.PositiveSmallIntegerField(choices=Choices.scooter_status_choices, default=1)
     activation_date = models.DateTimeField(auto_now_add=True)
     last_announce = models.DateTimeField(null=True, blank=True)
+    modem_ssid = models.CharField(max_length=255, null=True, blank=True)
+    modem_password = models.CharField(max_length=255, null=True, blank=True)
 
     def __str__(self):
         return str(self.phone_number)

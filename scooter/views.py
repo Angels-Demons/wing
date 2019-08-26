@@ -66,21 +66,21 @@ def announce_api(request):
         # print('valid announcement')
         instance.save()
         try:
+            # check if this is start ack
             ride = Ride.objects.get(scooter=scooter, is_finished=False, start_acknowledge_time=None)
-            # if ride and ride.start_acknowledge_time.__eq__(None) and ride.scooter.device_status==ride.scooter.status:
             if ride.scooter.device_status == ride.scooter.status:
                 ride.start_acknowledge_time = datetime.datetime.now()
                 ride.save()
         except:
             pass
         try:
+            # check if this is end ack
             ride = Ride.objects.filter(scooter=scooter, is_finished=True, end_acknowledge_time=None).last()
 
             if ride.scooter.device_status == ride.scooter.status:
                 ride.end_acknowledge_time = datetime.datetime.now()
                 ride.save()
-        except Exception as e:
-            print(e)
+        except:
             pass
 
         announcement = Announcement(

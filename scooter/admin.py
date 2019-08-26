@@ -11,7 +11,8 @@ class ScooterAdmin(admin.ModelAdmin):
     list_display = ('phone_number', 'device_code', 'latitude', 'longitude', 'site', 'battery', 'status',
                     'device_status',
                     'qr_info',
-                    'last_announce', 'activation_date')
+                    'last_announce', 'activation_date',
+                    'modem_ssid', 'modem_password',)
 
 
 class RideAdmin(admin.ModelAdmin):

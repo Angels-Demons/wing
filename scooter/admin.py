@@ -12,7 +12,7 @@ class ScooterAdmin(admin.ModelAdmin):
                     'device_status',
                     'qr_info',
                     'last_announce', 'activation_date',
-                    'modem_ssid', 'modem_password',)
+                    'is_operational', 'modem_ssid', 'modem_password',)
 
 
 class RideAdmin(admin.ModelAdmin):

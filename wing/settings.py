@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     # 'river',
     'background_task',
     # 'channels',
+    'fleet',
 ]
 
 # added : web socket

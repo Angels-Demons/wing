@@ -19,6 +19,7 @@ from rest_framework.status import (
 )
 
 # from ride.models import Ride
+from api.http import my_get_object_or_404, my_get_object_or_return_404
 from scooter.Serializers import ScooterSerializer, ScooterAnnounceSerializer, ProfileSerializer, ScooterAnnounceSerializerFakeLocation
 # from scooter import funcs
 from scooter.models import Scooter, Ride, Announcement
@@ -49,6 +50,7 @@ def authenticate(request):
 @api_view(["GET"])
 @permission_classes((AllowAny,))
 def announce_api(request):
+    # returns error_500 if the parameters are wrong
     device_code = request.GET['device_code']
     # scooter = Scooter.objects.get(device_code=device_code)
     scooter = get_object_or_404(Scooter, device_code=device_code)
@@ -56,7 +58,7 @@ def announce_api(request):
 
     data = request.GET.copy()
     del data['device_code']
-    if data['latitude'] == '0' and data['longitude'] == '0':
+    if float(data['latitude']) == 0 and float(data['longitude']) == 0:
         # print("got 0 coordinates")
         instance = ScooterAnnounceSerializerFakeLocation(instance=scooter, data=data)
     else:
@@ -71,6 +73,7 @@ def announce_api(request):
             if ride.scooter.device_status == ride.scooter.status:
                 ride.start_acknowledge_time = datetime.datetime.now()
                 ride.save()
+                ride.initiate_payout_counter()
         except:
             pass
         try:
@@ -185,6 +188,7 @@ def end_ride_mobile_api(request):
 
     # ride = Ride.objects.get(user=user, is_finished=False)
     ride = get_object_or_404(Ride, user=user, is_finished=False)
+    # ride = my_get_object_or_return_404(Ride, user=user, is_finished=False)
     return ride.end_ride()
 
 

@@ -16,7 +16,7 @@ class ScooterAdmin(admin.ModelAdmin):
 
 
 class RideAdmin(admin.ModelAdmin):
-    list_display = ('id', 'scooter', 'user', 'price', 'is_finished', 'is_reversed',
+    list_display = ('id', 'scooter', 'user', 'price', 'is_finished', 'is_reversed', 'is_terminated',
                     'duration', 'distance',
                     'start_time', 'start_acknowledge_time',
                     'end_time', 'end_acknowledge_time',

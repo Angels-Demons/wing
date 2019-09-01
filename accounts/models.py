@@ -1,10 +1,14 @@
+from compat import get_model
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.contrib.auth.models import PermissionsMixin
 from django.db import models
 from django.contrib import auth
 from django.core.exceptions import PermissionDenied
+from django.db.models import SET_NULL
+import django.utils.timezone
 
 from charging.models import Tariff
+# from scooter.models import Ride
 
 
 def _user_has_perm(user, perm, obj):
@@ -134,11 +138,13 @@ def create_profile(user, tariff_id=1):
 
 
 class Profile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, editable=False)
     credit = models.SmallIntegerField(default=0)
-    name = models.CharField(max_length=255)
+    current_ride = models.OneToOneField('scooter.Ride', null=True, blank=True, on_delete=SET_NULL, editable=False)
+    name = models.CharField(max_length=255, blank=True)
     email = models.EmailField(default='abc@gmail.com')
     tariff = models.ForeignKey(Tariff, on_delete=models.SET_DEFAULT, default=1)
+    timestamp = models.DateTimeField(auto_now_add=True, null=True, editable=False)
 
     def __str__(self):
         return self.name + ' ' + str(self.user.phone)

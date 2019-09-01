@@ -9,7 +9,7 @@ from accounts.models import User
 # from ride.models import Ride
 import geopy.distance
 from django.core.validators import MinValueValidator
-
+from fleet.models import Fleet
 from decimal import Decimal
 
 from rest_framework.response import Response
@@ -19,8 +19,18 @@ from rest_framework.status import (
     HTTP_200_OK
 )
 
-from scooter import funcs
-# from scooter.Serializers import ScooterAnnounceSerializer
+seconds_in_a_minute = 60
+try:
+    fleet = Fleet.objects.filter(active=True).first()
+    every_n_minute_charging = fleet.business_model.every_n_minute_charging
+    payout_period_minutes = fleet.payout_period_minutes
+    minimum_battery = fleet.minimum_battery
+except:
+    every_n_minute_charging = True
+    payout_period_minutes = 1
+    minimum_battery = 30
+
+print(every_n_minute_charging + payout_period_minutes + minimum_battery)
 
 
 class Choices:
@@ -36,6 +46,7 @@ class Choices:
 
 class Site(models.Model):
     name = models.CharField(max_length=255)
+    timestamp = models.DateTimeField(auto_now_add=True, null=True, editable=False)
 
     def __str__(self):
         return self.name
@@ -64,48 +75,46 @@ class Scooter(models.Model):
         return str(self.phone_number)
 
     def start_ride(self, user):
-        # if not scooter.device_code == int(device_code):
-        #     data = {'error': 'error: wrong device'}
-        #     return Response(data, status=HTTP_404_NOT_FOUND)
+        if user.profile.current_ride is not None:
+            data = {'error': 'error: user is riding'}
+            return Response(data, status=HTTP_400_BAD_REQUEST)
+
         if self.status != 1:
             data = {'error': 'error: device not free'}
             return Response(data, status=HTTP_400_BAD_REQUEST)
-        # modify
-        # really turn the device on here (via sms or net or whatever
+
+        # modify maybe: (if status == LOW_BATTERY)
+        if self.battery < minimum_battery:
+            data = {'error': 'error: device has low battery'}
+            return Response(data, status=HTTP_200_OK)
+
         if user.profile.credit < user.profile.tariff.minimum_credit:
             data = {
                 # 'code': NOT_ENOUGH_CREDIT
                 'error': 'error: not enough credit'}
             return Response(data, status=HTTP_200_OK)
 
-        # modify
-        # Here we don't take the credit off the wallet at start. We do it at the end
-        # user.profile.credit -= user.profile.tariff.initial_price
-        # user.profile.save()
         ride = Ride.initiate_ride(user=user, scooter=self)
         self.status = 2
-        # modify
-        # here: add scooter to the transient que
-        # (a wait list for response of scooter and maybe reversing the transaction)
         self.save()
         self.turn_on()
         data = {'message': 'success: device activated',
                 # 'device_id': device_id,
                 'ride_id': ride.id}
-        # print("before func")
-        ride.reverse_started_ride(ride.id)
-        # print("after func")
+
         return Response(data, status=HTTP_200_OK)
 
     # modify
     def turn_on(self):
         # sms.lock_unlock(self.phone_number, False, self.device_code)
         mqtt.send_mqtt('scooter/' + str(self.phone_number), 'unlock')
+        mqtt.send_mqtt('scooter/' + str(self.device_code), 'unlock')
 
     # modify
     def turn_off(self):
         # sms.lock_unlock(self.phone_number, True, self.device_code)
         mqtt.send_mqtt('scooter/' + str(self.phone_number), 'lock')
+        mqtt.send_mqtt('scooter/' + str(self.device_code), 'lock')
 
     # def announce(self, request):
     #     # update self with new info
@@ -173,6 +182,7 @@ class Ride(models.Model):
     duration = models.FloatField(null=True, verbose_name='duration(m)', editable=False)
     distance = models.SmallIntegerField(null=True, verbose_name='distance(km)', editable=False)
     is_reversed = models.BooleanField(default=False, editable=False)
+    is_terminated = models.BooleanField(default=False, editable=False)
 
     @staticmethod
     def initiate_ride(user, scooter,):
@@ -180,9 +190,25 @@ class Ride(models.Model):
                     scooter=scooter,
                     start_point_latitude=scooter.latitude,
                     start_point_longitude=scooter.longitude,
+                    price=0,
                     is_finished=False)
         ride.save()
+        ride.reverse_started_ride(ride_id=ride.id)
+        # modify: this should be moved to acknowledged ride
+        # if every_n_minute_charging:
+        #     print("this is initiate ride method for ride " + str(ride.id))
+        #     ride.count_for_next_payout(ride.id)
+        #     ride.subtract_payout_of_period()
+
+        user.profile.current_ride = ride
+        user.profile.save()
         return ride
+
+    def initiate_payout_counter(self):
+        if every_n_minute_charging:
+            print("This is initiate_payout_counter method for ride " + str(self.id))
+            self.count_for_next_payout(ride_id=self.id, counter=1)
+            self.subtract_payout_of_period()
 
     def __str__(self):
         return self.user.profile.name + " :" + str(self.scooter.device_code)
@@ -194,19 +220,19 @@ class Ride(models.Model):
         if self.scooter.status != 2:
             data = {'error': 'error: device not occupied'}
             return Response(data, status=HTTP_400_BAD_REQUEST)
-        # modify
-        # really turn the device off here!
         self.end_point_latitude = self.scooter.latitude
         self.end_point_longitude = self.scooter.longitude
         self.end_time = datetime.datetime.now()
         self.distance = self.get_distance_in_kilometers()
         self.duration = self.get_duration_in_minutes()
         self.is_reversed = is_reversed
-        # modify
-        # charge = True means it calculates the price at the end and charges the user
-        price = self.set_price_charge(charge=not is_reversed)
+        if not every_n_minute_charging:
+            self.set_price_charge(charge=not is_reversed)
+
         self.is_finished = True
         self.save()
+        self.user.profile.current_ride = None
+        self.user.profile.save()
         # self.user.profile.save()
         self.scooter.status = 1
         self.scooter.save()
@@ -282,6 +308,18 @@ class Ride(models.Model):
         self.save()
         return self.price
 
+    def subtract_payout_of_period(self):
+        period_price = self.user.profile.tariff.per_minute_price * payout_period_minutes
+        if self.user.profile.credit < period_price:
+            self.is_terminated = True
+            self.save()
+            self.end_ride()
+        else:
+            self.user.profile.credit -= period_price
+            self.price += period_price
+            self.save()
+            self.user.profile.save()
+
     @staticmethod
     @background(schedule=30)
     def reverse_started_ride(ride_id):
@@ -290,3 +328,13 @@ class Ride(models.Model):
         if ride.start_acknowledge_time is None:
             print("ride reversed due to no response from device")
             ride.end_ride(is_reversed=True)
+
+    @staticmethod
+    @background(schedule=payout_period_minutes * seconds_in_a_minute)
+    def count_for_next_payout(ride_id, counter):
+        print("counter executed for ride with id: " + str(ride_id) + " with period number " + str(counter))
+        ride = Ride.objects.get(pk=ride_id)
+        if not ride.is_finished:
+            ride.subtract_payout_of_period()
+            # print("initiating next counter for ride with id: " + str(ride_id))
+            ride.count_for_next_payout(ride_id=ride_id, counter=counter+1)

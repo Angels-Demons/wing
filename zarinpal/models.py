@@ -37,6 +37,7 @@ class Transaction(models.Model):
     # email = models.EmailField(blank=True, null=True)
     state = models.PositiveSmallIntegerField(choices=Choices.transaction_status_choices)
     recharged = models.BooleanField(default=False)
+    timestamp = models.DateTimeField(auto_now_add=True, null=True, editable=False)
 
     def recharge(self):
         self.user.profile.credit += self.amount

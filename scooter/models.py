@@ -1,6 +1,7 @@
 import datetime
 
 from background_task import background
+from django.db.models import SET_NULL
 from pytz import UTC
 
 from api import sms_send, sms, mqtt
@@ -20,6 +21,8 @@ from rest_framework.status import (
 )
 
 seconds_in_a_minute = 60
+half_a_minute = 30
+
 try:
     fleet = Fleet.objects.filter(active=True).first()
     every_n_minute_charging = fleet.business_model.every_n_minute_charging
@@ -31,6 +34,13 @@ except:
     minimum_battery = 30
 
 print(every_n_minute_charging + payout_period_minutes + minimum_battery)
+
+
+@background(schedule=half_a_minute)
+def check_for_unattached_scooters(ride_id, counter):
+    occupied_scooters = Scooter.objects.filter(status=2)
+    # for scooter in occupied_scooters:
+
 
 
 class Choices:
@@ -55,6 +65,7 @@ class Site(models.Model):
 class Scooter(models.Model):
     phone_number = models.BigIntegerField(unique=True)
     device_code = models.PositiveIntegerField(unique=True)
+    current_ride = models.OneToOneField('scooter.Ride', null=True, blank=True, on_delete=SET_NULL, editable=False, related_name="current_ride")
     qr_info = models.CharField(max_length=255, null=True, unique=True)
     # rider = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     # has credit
@@ -70,6 +81,14 @@ class Scooter(models.Model):
     is_operational = models.BooleanField(default=False)
     modem_ssid = models.CharField(max_length=255, null=True, blank=True)
     modem_password = models.CharField(max_length=255, null=True, blank=True)
+
+    # def save(self, *args, **kwargs):
+    #     ride = Ride.objects.filter(scooter=self, is_finished=False).first()
+    #     print(self.get_deferred_fields().__sizeof__())
+    #     print(self._meta.concrete_fields)
+    #     if not ride and 0:
+    #         pass
+    #     super(Scooter, self).save(*args, **kwargs)
 
     def __str__(self):
         return str(self.phone_number)
@@ -89,6 +108,12 @@ class Scooter(models.Model):
             return Response(data, status=HTTP_200_OK)
 
         if user.profile.credit < user.profile.tariff.minimum_credit:
+            data = {
+                # 'code': NOT_ENOUGH_CREDIT
+                'error': 'error: not enough credit'}
+            return Response(data, status=HTTP_200_OK)
+
+        if every_n_minute_charging and user.profile.credit < user.profile.tariff.per_minute_price * payout_period_minutes:
             data = {
                 # 'code': NOT_ENOUGH_CREDIT
                 'error': 'error: not enough credit'}
@@ -185,7 +210,7 @@ class Ride(models.Model):
     is_terminated = models.BooleanField(default=False, editable=False)
 
     @staticmethod
-    def initiate_ride(user, scooter,):
+    def initiate_ride(user, scooter):
         ride = Ride(user=user,
                     scooter=scooter,
                     start_point_latitude=scooter.latitude,
@@ -202,6 +227,8 @@ class Ride(models.Model):
 
         user.profile.current_ride = ride
         user.profile.save()
+        scooter.current_ride = ride
+        scooter.save()
         return ride
 
     def initiate_payout_counter(self):
@@ -211,7 +238,10 @@ class Ride(models.Model):
             self.subtract_payout_of_period()
 
     def __str__(self):
-        return self.user.profile.name + " :" + str(self.scooter.device_code)
+        label = "user: " + str(self.user.phone) + "\n"
+        label += "device_code: " + str(self.scooter.device_code) + "\n"
+        label += "ride_id: " + str(self.id)
+        return label
 
     def end_ride(self, is_reversed=False):
         if self.is_finished:
@@ -233,7 +263,7 @@ class Ride(models.Model):
         self.save()
         self.user.profile.current_ride = None
         self.user.profile.save()
-        # self.user.profile.save()
+        self.scooter.current_ride = None
         self.scooter.status = 1
         self.scooter.save()
         self.scooter.turn_off()

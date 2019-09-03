@@ -1,4 +1,6 @@
 from django.contrib import admin
+from django.urls import reverse
+from django.utils.html import format_html
 
 from scooter.models import Scooter, Site, Ride, Announcement
 
@@ -8,11 +10,29 @@ class AnnouncementAdmin(admin.ModelAdmin):
 
 
 class ScooterAdmin(admin.ModelAdmin):
-    list_display = ('phone_number', 'device_code', 'latitude', 'longitude', 'site', 'battery', 'status',
+    list_display = ('phone_number', 'device_code', '_current_ride', 'latitude', 'longitude', 'site', 'battery', 'status',
                     'device_status',
                     'qr_info',
                     'last_announce', 'activation_date',
                     'is_operational', 'modem_ssid', 'modem_password',)
+
+    def _current_ride(self, obj):
+        try:
+            link = reverse("admin:scooter_ride_change", args=[obj.current_ride.id]) #model name has to be lowercase
+            return format_html(u'<a href="%s">%s</a>' % (link, obj.current_ride))
+        except:
+            return None
+    _current_ride.allow_tags = True
+
+
+def end_ride_manually(modeladmin, request, queryset):
+    for ride in queryset:
+        if ride.is_finished:
+            continue
+        ride.end_ride()
+
+
+end_ride_manually.short_description = "End selected rides manually"
 
 
 class RideAdmin(admin.ModelAdmin):
@@ -22,6 +42,7 @@ class RideAdmin(admin.ModelAdmin):
                     'end_time', 'end_acknowledge_time',
                     'start_point_latitude', 'start_point_longitude', 'end_point_latitude', 'end_point_longitude',
                     )
+    actions = [end_ride_manually]
 
 
 admin.site.register(Scooter, ScooterAdmin)

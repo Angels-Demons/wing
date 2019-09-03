@@ -19,7 +19,7 @@ from rest_framework.status import (
 )
 
 # from ride.models import Ride
-from api.http import my_get_object_or_404, my_get_object_or_return_404
+from api.my_http import my_get_object_or_404, my_get_object_or_return_404
 from scooter.Serializers import ScooterSerializer, ScooterAnnounceSerializer, ProfileSerializer, ScooterAnnounceSerializerFakeLocation
 # from scooter import funcs
 from scooter.models import Scooter, Ride, Announcement

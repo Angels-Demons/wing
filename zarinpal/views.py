@@ -10,10 +10,10 @@ from zarinpal.models import Transaction
 
 # client = Client('https://www.zarinpal.com/pg/services/WebGate/wsdl')
 MERCHANT = '8f1d98e6-f9e5-11e8-868c-005056a205be'
-amount = 100  # Toman / Required
-description = "توضیحات مربوط به تراکنش را در این قسمت وارد کنید"  # Required
+# amount = 100  # Toman / Required
+description = "افزایش اعتبار کیف پول وینگ(سامانه کرایه اسکوتر برقی)"  # Required
 email = 'email@example.com'  # Optional
-mobile = '09123456789'  # Optional
+# mobile = '09123456789'  # Optional
 # CallbackURL = reverse_lazy('verify') # Important: need to edit for realy server.
 CallbackURL = 'http://5.253.27.84/zarinpal/verify/' # Important: need to edit for realy server.
 

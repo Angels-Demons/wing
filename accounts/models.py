@@ -140,7 +140,7 @@ def create_profile(user, tariff_id=1):
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, editable=False)
     credit = models.SmallIntegerField(default=0)
-    current_ride = models.OneToOneField('scooter.Ride', null=True, blank=True, on_delete=SET_NULL, editable=False)
+    current_ride = models.OneToOneField('scooter.Ride', null=True, blank=True, on_delete=SET_NULL, editable=True)
     name = models.CharField(max_length=255, blank=True)
     email = models.EmailField(default='abc@gmail.com')
     tariff = models.ForeignKey(Tariff, on_delete=models.SET_DEFAULT, default=1)

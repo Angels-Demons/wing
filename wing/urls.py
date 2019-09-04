@@ -13,8 +13,11 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+from background_task.models import Task
 from django.contrib import admin
 from django.urls import path, include
+
+from scooter.models import check_for_unattached_scooters
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -23,3 +26,6 @@ urlpatterns = [
     path('zarinpal/', include('zarinpal.urls')),
     # path('websocket/', include('example.urls')),
 ]
+tasks = Task.objects.filter(task_name="scooter.models.check_for_unattached_scooters")
+tasks.delete()
+check_for_unattached_scooters(0)

@@ -21,7 +21,7 @@ from rest_framework.status import (
 )
 
 seconds_in_a_minute = 60
-half_a_minute = 30
+half_a_minute = 60
 
 try:
     fleet = Fleet.objects.filter(active=True).first()
@@ -37,10 +37,22 @@ print(every_n_minute_charging + payout_period_minutes + minimum_battery)
 
 
 @background(schedule=half_a_minute)
-def check_for_unattached_scooters(ride_id, counter):
+def check_for_unattached_scooters(counter=0):
+    print(str(counter) + " :Checking for unattached scooters at: " + str(datetime.datetime.now()))
     occupied_scooters = Scooter.objects.filter(status=2)
-    # for scooter in occupied_scooters:
+    for scooter in occupied_scooters:
+        if scooter.current_ride is None:
+            print("Checker detected a buggy scooter (occupied with None current_ride) " + str(scooter.device_code))
+            scooter.status = 1
+            scooter.save()
+        elif Ride.objects.filter(scooter=scooter, is_finished=False).count() != 1:
+        # else:
+        # print(Ride.objects.filter(scooter=scooter, is_finished=False).count())
+            print("Checker detected a buggy scooter (occupied with no ride attached) " + str(scooter.device_code))
+            scooter.status = 1
+            scooter.save()
 
+    check_for_unattached_scooters(counter+1)
 
 
 class Choices:
@@ -65,7 +77,7 @@ class Site(models.Model):
 class Scooter(models.Model):
     phone_number = models.BigIntegerField(unique=True)
     device_code = models.PositiveIntegerField(unique=True)
-    current_ride = models.OneToOneField('scooter.Ride', null=True, blank=True, on_delete=SET_NULL, editable=False, related_name="current_ride")
+    current_ride = models.OneToOneField('scooter.Ride', null=True, blank=True, on_delete=SET_NULL, editable=True, related_name="current_ride")
     qr_info = models.CharField(max_length=255, null=True, unique=True)
     # rider = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     # has credit
@@ -91,7 +103,7 @@ class Scooter(models.Model):
     #     super(Scooter, self).save(*args, **kwargs)
 
     def __str__(self):
-        return str(self.phone_number)
+        return str(self.device_code)
 
     def start_ride(self, user):
         if user.profile.current_ride is not None:

@@ -45,12 +45,11 @@ def check_for_unattached_scooters(counter=0):
             print("Checker detected a buggy scooter (occupied with None current_ride) " + str(scooter.device_code))
             scooter.status = 1
             scooter.save()
-        elif Ride.objects.filter(scooter=scooter, is_finished=False).count() != 1:
-        # else:
-        # print(Ride.objects.filter(scooter=scooter, is_finished=False).count())
-            print("Checker detected a buggy scooter (occupied with no ride attached) " + str(scooter.device_code))
-            scooter.status = 1
-            scooter.save()
+        # elif Ride.objects.filter(scooter=scooter, is_finished=False).count() != 1:
+        # # print(Ride.objects.filter(scooter=scooter, is_finished=False).count())
+        #     print("Checker detected a buggy scooter (occupied with no ride attached) " + str(scooter.device_code))
+        #     scooter.status = 1
+        #     scooter.save()
 
     check_for_unattached_scooters(counter+1)
 
@@ -115,7 +114,7 @@ class Scooter(models.Model):
             return Response(data, status=HTTP_400_BAD_REQUEST)
 
         # modify maybe: (if status == LOW_BATTERY)
-        if self.battery < minimum_battery:
+        if self.battery < minimum_battery and self.is_operational:
             data = {'error': 'error: device has low battery'}
             return Response(data, status=HTTP_200_OK)
 

@@ -53,7 +53,8 @@ class ProfileSerializer(serializers.ModelSerializer):
         ride = Ride.objects.filter(user=profile.user, is_finished=False).first()
         if ride and ride.scooter.device_status == 2:
             return True
-        return False
+        else:
+            return False
 
     class Meta:
             model = Profile

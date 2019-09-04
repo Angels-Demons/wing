@@ -29,24 +29,26 @@ class Choices:
 
 
 class Transaction(models.Model):
-    authority = models.BigIntegerField(null=True)
-    ref_id = models.BigIntegerField(null=True)
-    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=False)
-    amount = models.IntegerField()
+    authority = models.BigIntegerField(null=True, editable=False)
+    ref_id = models.BigIntegerField(null=True, editable=False)
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=False, editable=False)
+    amount = models.IntegerField(editable=False)
     description = models.CharField(max_length=255)
-    state = models.PositiveSmallIntegerField(choices=Choices.transaction_status_choices)
-    recharged = models.BooleanField(default=False)
-    timestamp = models.DateTimeField(null=True)
+    # email = models.EmailField(blank=True, null=True)
+    state = models.PositiveSmallIntegerField(choices=Choices.transaction_status_choices, editable=False)
+    recharged = models.BooleanField(default=False, editable=False)
+    timestamp = models.DateTimeField(auto_now_add=True, null=True)
 
-    # authority = models.BigIntegerField(null=True, editable=False)
-    # ref_id = models.BigIntegerField(null=True, editable=False)
-    # user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=False, editable=False)
-    # amount = models.IntegerField(editable=False)
+    # authority = models.BigIntegerField(null=True)
+    # ref_id = models.BigIntegerField(null=True)
+    # user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=False)
+    # amount = models.IntegerField()
     # description = models.CharField(max_length=255)
-    # # email = models.EmailField(blank=True, null=True)
-    # state = models.PositiveSmallIntegerField(choices=Choices.transaction_status_choices, editable=False)
-    # recharged = models.BooleanField(default=False, editable=False)
-    # timestamp = models.DateTimeField(auto_now_add=True, null=True)
+    # state = models.PositiveSmallIntegerField(choices=Choices.transaction_status_choices)
+    # recharged = models.BooleanField(default=False)
+    # timestamp = models.DateTimeField(null=True)
+
+
 
     def recharge(self):
         self.user.profile.credit += self.amount

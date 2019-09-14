@@ -99,7 +99,9 @@ def announce_api(request):
 
     data = request.GET.copy()
     del data['device_code']
-    if float(data['latitude']) == 0 and float(data['longitude']) == 0:
+    latitude = float(data['latitude'])
+    longitude = float(data['longitude'])
+    if latitude == 0 and longitude == 0:
         # print("got 0 coordinates")
         instance = ScooterAnnounceSerializerFakeLocation(instance=scooter, data=data)
     else:
@@ -129,8 +131,8 @@ def announce_api(request):
 
         announcement = Announcement(
             scooter=scooter,
-            latitude=scooter.latitude,
-            longitude=scooter.longitude,
+            latitude=latitude,
+            longitude=longitude,
             battery=scooter.battery,
             device_status=scooter.device_status,
         )

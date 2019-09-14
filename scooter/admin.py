@@ -7,14 +7,17 @@ from scooter.models import Scooter, Site, Ride, Announcement
 
 class AnnouncementAdmin(admin.ModelAdmin):
     list_display = ('scooter', 'time', 'latitude', 'longitude', 'battery', 'device_status')
+    search_fields = ('scooter__device_code',)
 
 
 class ScooterAdmin(admin.ModelAdmin):
-    list_display = ('phone_number', 'device_code', '_current_ride', 'latitude', 'longitude', 'site', 'battery', 'status',
-                    'device_status',
+    list_display = ('phone_number', 'device_code', '_current_ride', 'latitude', 'longitude',
+                    'site', 'battery', 'status', 'device_status',
                     'qr_info',
                     'last_announce', 'activation_date',
                     'is_operational', 'modem_ssid', 'modem_password',)
+    list_filter = ('is_operational', 'status', 'device_status', 'activation_date')
+    search_fields = ('phone_number', 'device_code',)
 
     def _current_ride(self, obj):
         try:
@@ -43,6 +46,8 @@ class RideAdmin(admin.ModelAdmin):
                     'start_point_latitude', 'start_point_longitude', 'end_point_latitude', 'end_point_longitude',
                     )
     actions = [end_ride_manually]
+    list_filter = ('is_reversed', 'is_terminated')
+    search_fields = ('scooter__device_code', 'user__phone')
 
 
 admin.site.register(Scooter, ScooterAdmin)

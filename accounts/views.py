@@ -82,8 +82,8 @@ def login(request):
 # @csrf_exempt
 # @api_view(["POST"])
 # @permission_classes((AllowAny,))
-def sign(request):
-    user_manager = UserManager()
-    user_manager.create_staffuser(request.GET['phone'], request.GET['password'])
-    return Response({'success': 'success'},
-                    status=HTTP_200_OK)
+# def sign(request):
+#     user_manager = UserManager()
+#     user_manager.create_staffuser(request.GET['phone'], request.GET['password'])
+#     return Response({'success': 'success'},
+#                     status=HTTP_200_OK)

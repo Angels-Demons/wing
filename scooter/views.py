@@ -42,44 +42,44 @@ def authenticate(request):
     owner_of_phone = User.objects.filter(phone=phone).first()
     owner_of_token = Token.objects.filter(key=token).first()
     if not owner_of_phone or not owner_of_token:
-        # TEMPORARY: comment ===================================== 55
-        print("Here:")
-        print(phone)
-        print(token)
-        print("")
-        f = open("users.txt", "a")
-        f.write(phone)
-        f.write("\n")
-        f.write(token)
-        f.write("\n")
-        f.close()
-        # user exists but token is invalid
-        if owner_of_phone:
-            old_token = Token.objects.filter(user=owner_of_phone).first()
-            if old_token:
-                old_token.delete()
-                # old_token.key = token
-                # old_token.save()
-            else:
-                new_token = Token(key=token, user=owner_of_phone)
-                new_token.save()
-            return owner_of_phone
-        if owner_of_token:
-            data = {'error': 'error: invalid credentials'}
-            return Response(data, status=HTTP_400_BAD_REQUEST)
-        else:
-            manager = UserManager()
-            user = manager.create_user(phone, 1111)
-            # modify
-            # you can set the tariff_id here
-            profile = create_profile(user)
-            return profile.user
+        # TEMPORARY: commented already =====================================
+        # print("Here:")
+        # print(phone)
+        # print(token)
+        # print("")
+        # f = open("users.txt", "a")
+        # f.write(phone)
+        # f.write("\n")
+        # f.write(token)
+        # f.write("\n")
+        # f.close()
+        # # user exists but token is invalid
+        # if owner_of_phone:
+        #     old_token = Token.objects.filter(user=owner_of_phone).first()
+        #     if old_token:
+        #         old_token.delete()
+        #         # old_token.key = token
+        #         # old_token.save()
+        #     else:
+        #         new_token = Token(key=token, user=owner_of_phone)
+        #         new_token.save()
+        #     return owner_of_phone
+        # if owner_of_token:
+        #     data = {'error': 'error: invalid credentials'}
+        #     return Response(data, status=HTTP_400_BAD_REQUEST)
+        # else:
+        #     manager = UserManager()
+        #     user = manager.create_user(phone, 1111)
+        #     # modify
+        #     # you can set the tariff_id here
+        #     profile = create_profile(user)
+        #     return profile.user
 
         # till here ============================================= 55
 
-        # Temporary : uncomment the next 2 lines
-        # data = {'error': 'error: token or phone not found'}
-        # return Response(data, status=HTTP_404_NOT_FOUND)
+        # Temporary : uncommented already the next 2 lines
+        data = {'error': 'error: token or phone not found'}
+        return Response(data, status=HTTP_404_NOT_FOUND)
     if owner_of_token.user == owner_of_phone:
         return owner_of_phone
     else:
@@ -153,7 +153,7 @@ def announce_api(request):
 
 @csrf_exempt
 @api_view(["POST"])
-@permission_classes((AllowAny,))
+# @permission_classes((AllowAny,))
 def nearby_devices_mobile_api(request):
     user = authenticate(request)
     if not isinstance(user, User):
@@ -166,7 +166,7 @@ def nearby_devices_mobile_api(request):
 
 @csrf_exempt
 @api_view(["POST"])
-@permission_classes((AllowAny,))
+# @permission_classes((AllowAny,))
 def start_ride_mobile_api(request):
     user = authenticate(request)
     if not isinstance(user, User):
@@ -187,7 +187,7 @@ def start_ride_mobile_api(request):
 
 @csrf_exempt
 @api_view(["POST"])
-@permission_classes((AllowAny,))
+# @permission_classes((AllowAny,))
 def verify_ride_mobile_api(request):
     user = authenticate(request)
     if not isinstance(user, User):
@@ -219,7 +219,7 @@ def verify_ride_mobile_api(request):
 
 @csrf_exempt
 @api_view(["POST"])
-@permission_classes((AllowAny,))
+# @permission_classes((AllowAny,))
 def end_ride_mobile_api(request):
     user = authenticate(request)
     if not isinstance(user, User):
@@ -241,7 +241,7 @@ def end_ride_mobile_api(request):
 
 @csrf_exempt
 @api_view(["POST"])
-@permission_classes((AllowAny,))
+# @permission_classes((AllowAny,))
 def my_profile_api(request):
     user = authenticate(request)
     if not isinstance(user, User):

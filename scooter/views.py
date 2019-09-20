@@ -101,10 +101,19 @@ def announce_api(request):
     del data['device_code']
     latitude = float(data['latitude'])
     longitude = float(data['longitude'])
+    gps_board_connected = False
+    # gps_valid = False
+    try:
+        gps_board_connected = data['gps_board_connected']
+        # gps_valid_data = data['gps_valid']
+    except Exception:
+        pass
     if latitude == 0 and longitude == 0:
+        data['gps_valid'] = False
         # print("got 0 coordinates")
         instance = ScooterAnnounceSerializerFakeLocation(instance=scooter, data=data)
     else:
+        data['gps_valid'] = True
         instance = ScooterAnnounceSerializer(instance=scooter, data=data)
 
     if instance.is_valid():
@@ -135,6 +144,8 @@ def announce_api(request):
             longitude=longitude,
             battery=scooter.battery,
             device_status=scooter.device_status,
+            gps_board_connected=gps_board_connected,
+            gps_valid=data['gps_valid'],
         )
         announcement.save()
 

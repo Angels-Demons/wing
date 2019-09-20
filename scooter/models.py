@@ -23,15 +23,37 @@ from rest_framework.status import (
 seconds_in_a_minute = 60
 half_a_minute = 60
 
+# modify
+# try:
+#     fleet = Fleet.objects.filter(active=True).first()
+#     business_model = Bus
+# except:
+#     fleet = Fleet(payout_period_minutes=10,
+#                   minimum_battery=30,
+#                   time_threshold=300,
+#                   active=True)
+#     # fleet.save()
+#
+# every_n_minute_charging = fleet.business_model.every_n_minute_charging
+# payout_period_minutes = fleet.payout_period_minutes
+# minimum_battery = fleet.minimum_battery
+# time_threshold = fleet.time_threshold
+#
+# print(every_n_minute_charging + payout_period_minutes + minimum_battery)
+
+
 try:
     fleet = Fleet.objects.filter(active=True).first()
     every_n_minute_charging = fleet.business_model.every_n_minute_charging
     payout_period_minutes = fleet.payout_period_minutes
     minimum_battery = fleet.minimum_battery
+    time_threshold = fleet.time_threshold
+    print(fleet)
 except:
     every_n_minute_charging = True
     payout_period_minutes = 1
     minimum_battery = 30
+    time_threshold = 300
 
 print(every_n_minute_charging + payout_period_minutes + minimum_battery)
 
@@ -92,6 +114,8 @@ class Scooter(models.Model):
     is_operational = models.BooleanField(default=False)
     modem_ssid = models.CharField(max_length=255, null=True, blank=True)
     modem_password = models.CharField(max_length=255, null=True, blank=True)
+    gps_board_connected = models.BooleanField(default=True, verbose_name="GPS Board")
+    gps_valid = models.BooleanField(default=True)
 
     # def save(self, *args, **kwargs):
     #     ride = Ride.objects.filter(scooter=self, is_finished=False).first()
@@ -198,6 +222,9 @@ class Announcement(models.Model):
     longitude = models.DecimalField(max_digits=9, decimal_places=6)
     battery = models.PositiveSmallIntegerField(validators=[MinValueValidator(0)])
     device_status = models.PositiveSmallIntegerField(choices=Choices.scooter_status_choices)
+    gps_board_connected = models.BooleanField(default=True)
+    gps_valid = models.BooleanField(default=True)
+
 #     modify
 #     def create(self):
 

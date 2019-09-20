@@ -1,23 +1,65 @@
+import datetime
+
 from django.contrib import admin
 from django.urls import reverse
 from django.utils.html import format_html
 
-from scooter.models import Scooter, Site, Ride, Announcement
+from scooter.models import Scooter, Site, Ride, Announcement, time_threshold
 
 
 class AnnouncementAdmin(admin.ModelAdmin):
-    list_display = ('scooter', 'time', 'latitude', 'longitude', 'battery', 'device_status')
+    list_display = ('scooter', 'time', 'latitude', 'longitude', 'battery', 'device_status', 'gps_board_connected', 'gps_valid')
     search_fields = ('scooter__device_code',)
+
+
+class IsAliveFilter(admin.SimpleListFilter):
+    title = 'alive'
+    parameter_name = 'alive'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('Yes', 'Yes'),
+            ('No', 'No'),
+        )
+
+    def queryset(self, request, queryset):
+        value = self.value()
+        if value == 'Yes':
+            # return (datetime.datetime.now() - obj.last_announce).seconds < time_threshold
+            # return queryset.filter(benevolence_factor__gt=75)
+            alive_scooters = []
+            for scooter in queryset:
+                if (datetime.datetime.now() - scooter.last_announce).seconds < time_threshold:
+                    alive_scooters.append(scooter)
+            return alive_scooters
+        elif value == 'No':
+            # return queryset.exclude(benevolence_factor__gt=75)
+            not_alive_scooters = []
+            for scooter in queryset:
+                if not (datetime.datetime.now() - scooter.last_announce).seconds < time_threshold:
+                    not_alive_scooters.append(scooter)
+            return not_alive_scooters
+        return queryset
 
 
 class ScooterAdmin(admin.ModelAdmin):
     list_display = ('phone_number', 'device_code', '_current_ride', 'latitude', 'longitude',
                     'site', 'battery', 'status', 'device_status',
+                    'alive', 'gps_board_connected', 'gps_valid',
                     'qr_info',
                     'last_announce', 'activation_date',
                     'is_operational', 'modem_ssid', 'modem_password',)
-    list_filter = ('is_operational', 'status', 'device_status', 'activation_date')
+    # list_filter = ('IsAliveFilter', 'is_operational', 'status', 'device_status', 'last_announce')
+    list_filter = ('is_operational', 'status', 'device_status', 'last_announce')
     search_fields = ('phone_number', 'device_code',)
+
+    def alive(self, obj):
+        try:
+            return (datetime.datetime.now() - obj.last_announce).seconds < time_threshold
+        except Exception:
+            return False
+    alive.boolean = True
+    alive.allow_tags = True
 
     def _current_ride(self, obj):
         try:

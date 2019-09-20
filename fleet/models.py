@@ -14,3 +14,19 @@ class Fleet(models.Model):
     minimum_battery = models.PositiveSmallIntegerField(blank=False, null=False)
     payout_period_minutes = models.PositiveSmallIntegerField(blank=False, null=False)
     timestamp = models.DateTimeField(auto_now_add=True, null=True, editable=False)
+    time_threshold = models.PositiveIntegerField(default=300, verbose_name='time threshold(s)')
+
+    # def __str__(self):
+    #     str_fleet = 'business model: '
+    #     str_fleet += self.business_model.__str__() + "\n"
+    #     str_fleet += 'n minute charging: '
+    #     str_fleet += str(self.business_model.every_n_minute_charging) + "\n"
+    #     str_fleet += 'n minute charging: '
+    #     str_fleet += self.business_model.every_n_minute_charging + "\n"
+    #     str_fleet += 'n minute charging: '
+    #     str_fleet += self.business_model.every_n_minute_charging + "\n"
+    #     str_fleet += 'n minute charging: '
+    #     str_fleet += self.business_model.every_n_minute_charging + "\n"
+
+
+

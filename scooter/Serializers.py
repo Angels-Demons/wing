@@ -31,7 +31,9 @@ class ProfileSerializer(serializers.ModelSerializer):
         # else:
         #     print("is not instance of profile")
         #     ride = Ride.objects.filter(user=profile.instance.user, is_finished=False).first()
-        ride = Ride.objects.filter(user=profile.user, is_finished=False).first()
+
+        # ride = Ride.objects.filter(user=profile.user, is_finished=False).first()
+        ride = profile.current_ride
         if ride:
             self.ride_id = ride.id
             self.timer = ride.get_duration_in_seconds()
@@ -51,7 +53,9 @@ class ProfileSerializer(serializers.ModelSerializer):
         #     print("is not instance of profile")
         #     ride = get_object_or_404(Ride, user=profile.instance.user, is_finished=False)
         ride = Ride.objects.filter(user=profile.user, is_finished=False).first()
-        if ride and ride.scooter.device_status == 2:
+        # modify: modified! used to be if ride.scooter.device_status == 2
+
+        if ride and ride.start_acknowledge_time is not None:
             return True
         else:
             return False
@@ -70,10 +74,10 @@ class ScooterSerializer(serializers.ModelSerializer):
 class ScooterAnnounceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Scooter
-        fields = ['latitude', 'longitude', 'battery', 'device_status']
+        fields = ['latitude', 'longitude', 'battery', 'device_status', 'gps_board_connected', 'gps_valid']
 
 
 class ScooterAnnounceSerializerFakeLocation(serializers.ModelSerializer):
     class Meta:
         model = Scooter
-        fields = ['battery', 'device_status']
+        fields = ['battery', 'device_status', 'gps_board_connected', 'gps_valid']

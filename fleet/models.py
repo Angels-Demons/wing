@@ -7,6 +7,9 @@ class BusinessModel(models.Model):
     every_n_minute_charging = models.BooleanField()
     timestamp = models.DateTimeField(auto_now_add=True, null=True, editable=False)
 
+    def __str__(self):
+        return self.name
+
 
 class Fleet(models.Model):
     business_model = models.ForeignKey(BusinessModel, on_delete=models.CASCADE, default=0)

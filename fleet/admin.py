@@ -18,7 +18,7 @@ class FleetAdmin(admin.ModelAdmin):
 
 
 class BusinessModelAdmin(admin.ModelAdmin):
-    list_display = ('name', 'timestamp')
+    list_display = ('name', 'every_n_minute_charging', 'timestamp')
 
 
 admin.site.register(Fleet, FleetAdmin)

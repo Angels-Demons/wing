@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 # Github.com/Rasooll
+from django.contrib.auth.decorators import login_required, permission_required
 from django.http import HttpResponse
 from django.shortcuts import redirect, get_object_or_404, render
 from django.urls import reverse, reverse_lazy
 from zeep import Client
 
-from accounts.models import User
+from accounts.models import User, Profile
+from zarinpal.forms import TopUpForm
 from zarinpal.models import Transaction
 
 # client = Client('https://www.zarinpal.com/pg/services/WebGate/wsdl')
@@ -104,3 +106,50 @@ def transaction_verify(request):
         }
         return render(request, 'zarinpal/index.html', context)
 
+
+@login_required
+@permission_required('zarinpal.top_up', login_url="/admin")
+def top_up(request, profile_id, phone):
+    input_form = TopUpForm(initial={"profile": profile_id})
+    # if not input_form.is_valid():
+    #     context = {
+    #         'header': 'Top up',
+    #         'title': phone,
+    #         # 'state': 'مرحله اول',
+    #         'form': input_form,
+    #         'url': '../../top_up/' + str(profile_id) + "/" + str(phone),
+    #     }
+    #     # print("imsi msisdn form is raw or not valid")
+    #     return render(request, 'zarinpal/topup_index.html', context)
+    input_form.instance.admin = request.user
+    context = {
+        'header': 'Top up',
+        'title': phone,
+        # 'state': 'مرحله اول',
+        'form': input_form,
+        'url': '../top_up_exe',
+    }
+    # print("imsi msisdn form is raw or not valid")
+    return render(request, 'zarinpal/topup_index.html', context)
+    # input_form.save()
+    # return redirect('../../admin/zarinpal/topup')
+
+
+@login_required
+@permission_required('zarinpal.top_up')
+def top_up_exe(request):
+    input_form = TopUpForm(request.POST or None)
+    if not input_form.is_valid():
+        print()
+        context = {
+            'header': 'Top up',
+            # 'title': phone,
+            # 'state': 'مرحله اول',
+            'form': input_form,
+            'url': '../top_up',
+        }
+        # print("imsi msisdn form is raw or not valid")
+        return render(request, 'zarinpal/topup_index.html', context)
+    input_form.instance.admin = request.user
+    input_form.save()
+    return redirect('../../admin/zarinpal/topup')

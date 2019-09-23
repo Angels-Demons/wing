@@ -16,7 +16,7 @@ def _user_has_perm(user, perm, obj):
     A backend can raise `PermissionDenied` to short-circuit permission checking.
     """
     for backend in auth.get_backends():
-        print(backend)
+        # print(backend)
         if not hasattr(backend, 'has_perm'):
             continue
         try:
@@ -32,16 +32,16 @@ def _user_has_module_perms(user, app_label):
     A backend can raise `PermissionDenied` to short-circuit permission checking.
     """
     for backend in auth.get_backends():
-        print(backend)
+        # print(backend)
         if not hasattr(backend, 'has_module_perms'):
             continue
         try:
             if backend.has_module_perms(user, app_label):
-                print('true')
+                # print('true')
                 return True
         except PermissionDenied:
             return False
-    print("false")
+    # print("false")
     return False
 
 

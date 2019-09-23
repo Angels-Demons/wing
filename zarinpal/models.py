@@ -1,7 +1,37 @@
+import datetime
+
 from django.db import models
 # from river.models.fields.state import StateField
 
-from accounts.models import User
+from accounts.models import User, Profile
+
+
+class TopUp(models.Model):
+
+    class Meta:
+        permissions = (
+            ("top_up", "Can top up users"),
+        )
+
+    profile = models.ForeignKey(Profile, on_delete=models.SET_NULL, null=True, blank=False)
+    admin = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=False, editable=False)
+    amount = models.SmallIntegerField()
+    description = models.CharField(max_length=255)
+    success = models.BooleanField(default=False)
+    timestamp = models.DateTimeField(auto_now_add=True, default=datetime.datetime.now)
+
+    # def save(self, force_insert=False, force_update=False, using=None,
+    #          update_fields=None):
+    #     super(TopUp, self).save()
+    def save(self, *args, **kwargs):
+        former = self.profile.credit
+        self.profile.credit += self.amount
+        self.profile.save()
+        if former + self.amount == self.profile.credit:
+            self.success = True
+            super(TopUp, self).save(*args, **kwargs)
+        else:
+            super(TopUp, self).save(*args, **kwargs)
 
 
 class Choices:
@@ -47,8 +77,6 @@ class Transaction(models.Model):
     # state = models.PositiveSmallIntegerField(choices=Choices.transaction_status_choices)
     # recharged = models.BooleanField(default=False)
     # timestamp = models.DateTimeField(null=True)
-
-
 
     def recharge(self):
         self.user.profile.credit += self.amount

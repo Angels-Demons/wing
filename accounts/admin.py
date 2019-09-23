@@ -18,7 +18,22 @@ class UserAdmin(admin.ModelAdmin):
 
 
 class ProfileAdmin(admin.ModelAdmin):
-    list_display = ('user', 'credit', '_current_ride', 'name', 'email', 'tariff', 'timestamp')
+    list_display = ('user', 'credit', '_current_ride', 'name', 'email', 'tariff', 'top_up', 'timestamp')
+    search_fields = ('user__phone',)
+
+    def top_up(self, obj):
+        try:
+            link = "/../../../zarinpal/top_up/" + str(obj.id) + "/" + str(obj.user.phone)
+            # link = reverse("admin:scooter_ride_change", args=[obj.current_ride.id])  # model name has to be lowercase
+            return format_html(
+                """<input type="button" style="margin:2px;2px;2px;2px;" value="%s" onclick = "location.href=\'%s\'"/>"""
+                % ("top up", link))
+        except Exception as e:
+            print(e)
+            return None
+
+    top_up.allow_tags = True
+    top_up.label = "top up"
 
     def _current_ride(self, obj):
         try:

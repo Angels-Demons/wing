@@ -18,7 +18,7 @@ class TopUp(models.Model):
     amount = models.SmallIntegerField()
     description = models.CharField(max_length=255)
     success = models.BooleanField(default=False)
-    timestamp = models.DateTimeField(auto_now_add=True, default=datetime.datetime.now)
+    timestamp = models.DateTimeField(auto_now_add=True)
 
     # def save(self, force_insert=False, force_update=False, using=None,
     #          update_fields=None):

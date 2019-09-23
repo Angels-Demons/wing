@@ -215,20 +215,6 @@ class Scooter(models.Model):
         return nearby
 
 
-class Announcement(models.Model):
-    scooter = models.ForeignKey(Scooter, on_delete=models.CASCADE)
-    time = models.DateTimeField(auto_now_add=True)
-    latitude = models.DecimalField(max_digits=9, decimal_places=6)
-    longitude = models.DecimalField(max_digits=9, decimal_places=6)
-    battery = models.PositiveSmallIntegerField(validators=[MinValueValidator(0)])
-    device_status = models.PositiveSmallIntegerField(choices=Choices.scooter_status_choices)
-    gps_board_connected = models.BooleanField(default=True)
-    gps_valid = models.BooleanField(default=True)
-
-#     modify
-#     def create(self):
-
-
 class Ride(models.Model):
     scooter = models.ForeignKey(Scooter, on_delete=models.CASCADE, editable=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE, editable=False)
@@ -406,3 +392,18 @@ class Ride(models.Model):
             ride.subtract_payout_of_period()
             # print("initiating next counter for ride with id: " + str(ride_id))
             ride.count_for_next_payout(ride_id=ride_id, counter=counter+1)
+
+
+class Announcement(models.Model):
+    scooter = models.ForeignKey(Scooter, on_delete=models.CASCADE)
+    ride = models.ForeignKey(Ride, on_delete=models.SET_NULL, null=True)
+    time = models.DateTimeField(auto_now_add=True)
+    latitude = models.DecimalField(max_digits=9, decimal_places=6)
+    longitude = models.DecimalField(max_digits=9, decimal_places=6)
+    battery = models.PositiveSmallIntegerField(validators=[MinValueValidator(0)])
+    device_status = models.PositiveSmallIntegerField(choices=Choices.scooter_status_choices)
+    gps_board_connected = models.BooleanField(default=True)
+    gps_valid = models.BooleanField(default=True)
+
+#     modify
+#     def create(self):

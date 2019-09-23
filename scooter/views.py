@@ -138,8 +138,11 @@ def announce_api(request):
         except:
             pass
 
+        # assign announce to ride
+        ride = Ride.objects.filter(scooter=scooter, is_finished=False).first()
         announcement = Announcement(
             scooter=scooter,
+            ride=ride,
             latitude=latitude,
             longitude=longitude,
             battery=scooter.battery,

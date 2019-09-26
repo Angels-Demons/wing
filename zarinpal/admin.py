@@ -8,7 +8,7 @@ class TransactionAdmin(admin.ModelAdmin):
 
 
 class TopUpAdmin(admin.ModelAdmin):
-    list_display = ('profile', 'admin', 'amount', 'description', 'success')
+    list_display = ('profile', 'admin', 'amount', 'description', 'success', 'timestamp')
     readonly_fields = ('profile', 'admin', 'amount', 'description', 'success')
 
     # def get_readonly_fields(self, request, obj=None):

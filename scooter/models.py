@@ -116,6 +116,7 @@ class Scooter(models.Model):
     modem_password = models.CharField(max_length=255, null=True, blank=True)
     gps_board_connected = models.BooleanField(default=True, verbose_name="GPS Board")
     gps_valid = models.BooleanField(default=True)
+    alerted = models.BooleanField(default=False)
 
     # def save(self, *args, **kwargs):
     #     ride = Ride.objects.filter(scooter=self, is_finished=False).first()
@@ -404,6 +405,9 @@ class Announcement(models.Model):
     device_status = models.PositiveSmallIntegerField(choices=Choices.scooter_status_choices)
     gps_board_connected = models.BooleanField(default=True)
     gps_valid = models.BooleanField(default=True)
+    ack_start = models.BooleanField(default=False)
+    ack_end = models.BooleanField(default=False)
+    alerted = models.BooleanField(default=False)
 
 #     modify
 #     def create(self):

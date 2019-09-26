@@ -8,7 +8,8 @@ from scooter.models import Scooter, Site, Ride, Announcement, time_threshold
 
 
 class AnnouncementAdmin(admin.ModelAdmin):
-    list_display = ('scooter', 'ride', 'time', 'latitude', 'longitude', 'battery', 'device_status', 'gps_board_connected', 'gps_valid')
+    list_display = ('scooter', 'ride', 'time', 'latitude', 'longitude', 'battery', 'device_status',
+                    'gps_board_connected', 'gps_valid', 'ack_start', 'ack_end', 'alerted')
     search_fields = ['scooter__device_code']
 
 
@@ -44,7 +45,7 @@ class IsAliveFilter(admin.SimpleListFilter):
 
 class ScooterAdmin(admin.ModelAdmin):
     list_display = ('phone_number', 'device_code', '_current_ride', 'latitude', 'longitude',
-                    'site', 'battery', 'status', 'device_status',
+                    'site', 'battery', 'status', 'device_status', 'alerted',
                     'alive', 'gps_board_connected', 'gps_valid',
                     'qr_info',
                     'last_announce', 'activation_date',

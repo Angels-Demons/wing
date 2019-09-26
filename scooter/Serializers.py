@@ -2,7 +2,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 
 from accounts.models import Profile
-from scooter.models import Scooter, Ride
+from scooter.models import Scooter, Ride, Announcement
 
 
 # used in My State API
@@ -74,10 +74,21 @@ class ScooterSerializer(serializers.ModelSerializer):
 class ScooterAnnounceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Scooter
-        fields = ['latitude', 'longitude', 'battery', 'device_status', 'gps_board_connected', 'gps_valid']
+        fields = ['latitude', 'longitude', 'battery', 'device_status', 'gps_board_connected', 'gps_valid', 'alerted']
 
 
 class ScooterAnnounceSerializerFakeLocation(serializers.ModelSerializer):
     class Meta:
         model = Scooter
-        fields = ['battery', 'device_status', 'gps_board_connected', 'gps_valid']
+        fields = ['battery', 'device_status', 'gps_board_connected', 'gps_valid', 'alerted']
+
+
+class AnnounceSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Announcement
+        fields = [
+            'scooter', 'ride',
+            'time', 'latitude', 'longitude', 'battery', 'device_status',
+            'gps_board_connected', 'gps_valid', 'ack_start', 'ack_end', 'alerted'
+        ]

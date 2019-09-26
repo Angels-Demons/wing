@@ -20,7 +20,8 @@ from rest_framework.status import (
 
 # from ride.models import Ride
 from api.my_http import my_get_object_or_404, my_get_object_or_return_404
-from scooter.Serializers import ScooterSerializer, ScooterAnnounceSerializer, ProfileSerializer, ScooterAnnounceSerializerFakeLocation
+from scooter.Serializers import ScooterSerializer, ScooterAnnounceSerializer, ProfileSerializer,\
+    ScooterAnnounceSerializerFakeLocation, AnnounceSerializer
 # from scooter import funcs
 from scooter.models import Scooter, Ride, Announcement
 import logging
@@ -91,78 +92,87 @@ def authenticate(request):
 @api_view(["GET"])
 @permission_classes((AllowAny,))
 def announce_api(request):
-    # returns error_500 if the parameters are wrong
-    device_code = request.GET['device_code']
-    # scooter = Scooter.objects.get(device_code=device_code)
-    scooter = get_object_or_404(Scooter, device_code=device_code)
-    # return scooter.announce(request)
-
     data = request.GET.copy()
-    del data['device_code']
-    latitude = float(data['latitude'])
-    longitude = float(data['longitude'])
-    gps_board_connected = False
-    # gps_valid = False
-    try:
-        gps_board_connected = data['gps_board_connected']
-        # gps_valid_data = data['gps_valid']
-    except Exception:
-        pass
-    if latitude == 0 and longitude == 0:
+    device_code = data['device_code']
+    scooter = get_object_or_404(Scooter, device_code=device_code)
+    data['scooter'] = scooter.id
+    if scooter.current_ride:
+        data['ride'] = scooter.current_ride.id
+        # modify: retrieve the ack start or end individually from current ride with small overhead
+        # if scooter.current_ride.start_acknowledge_time is None:
+        #     data['ack_start'] = True
+
+    announce = AnnounceSerializer(data=data)
+    if not announce.is_valid():
+        return Response(str(announce.errors), status=HTTP_400_BAD_REQUEST)
+    announce = announce.save()
+    scooter.last_announce = announce.time
+    scooter.save()
+
+    # modify: comment out later until code_61 --------- [after gps_valid is sent]
+    if announce.latitude == 0 and announce.longitude == 0:
         data['gps_valid'] = False
-        # print("got 0 coordinates")
         instance = ScooterAnnounceSerializerFakeLocation(instance=scooter, data=data)
     else:
         data['gps_valid'] = True
         instance = ScooterAnnounceSerializer(instance=scooter, data=data)
+    # code_61 -----------------------------------------
 
-    if instance.is_valid():
-        # print('valid announcement')
-        instance.save()
+    # modify: uncomment later until code_62 --------- [after gps_valid is sent]
+    # if announce.gps_valid:
+    #     instance = ScooterAnnounceSerializerFakeLocation(instance=scooter, data=data)
+    # else:
+    #     instance = ScooterAnnounceSerializer(instance=scooter, data=data)
+    # code_62 ---------------------------------------
+
+    if not instance.is_valid():
+        return Response(str(instance.errors), status=HTTP_400_BAD_REQUEST)
+
+    error = ""
+    instance.save()
+    if announce.ack_start:
         try:
-            # check if this is start ack
-            ride = Ride.objects.get(scooter=scooter, is_finished=False, start_acknowledge_time=None)
-            if ride.scooter.device_status == ride.scooter.status:
-                ride.start_acknowledge_time = datetime.datetime.now()
-                ride.save()
-                ride.initiate_payout_counter()
-        except:
-            pass
+            ride = Ride.objects.filter(scooter=scooter, is_finished=False, start_acknowledge_time=None).last()
+            ride.start_acknowledge_time = datetime.datetime.now()
+            ride.save()
+            ride.initiate_payout_counter()
+        except AttributeError as e:
+            error += "invalid start ack"
+
+    elif announce.ack_end:
         try:
-            # check if this is end ack
             ride = Ride.objects.filter(scooter=scooter, is_finished=True, end_acknowledge_time=None).last()
+            ride.end_acknowledge_time = datetime.datetime.now()
+            ride.save()
+        except AttributeError as e:
+            error += "invalid end ack"
 
-            if ride.scooter.device_status == ride.scooter.status:
-                ride.end_acknowledge_time = datetime.datetime.now()
-                ride.save()
-        except:
-            pass
+    # modify: comment out later until code_63 --------- [after ack_start and ack_end is sent]
+    try:
+        # check if this is start ack
+        ride = Ride.objects.filter(scooter=scooter, is_finished=False, start_acknowledge_time=None).last()
+        if ride.scooter.device_status == ride.scooter.status:
+            ride.start_acknowledge_time = datetime.datetime.now()
+            ride.save()
+            ride.initiate_payout_counter()
+    except:
+        pass
+    try:
+        # check if this is end ack
+        ride = Ride.objects.filter(scooter=scooter, is_finished=True, end_acknowledge_time=None).last()
+        if ride.scooter.device_status == ride.scooter.status:
+            ride.end_acknowledge_time = datetime.datetime.now()
+            ride.save()
+    except:
+        pass
 
-        # assign announce to ride
-        ride = Ride.objects.filter(scooter=scooter, is_finished=False).first()
-        announcement = Announcement(
-            scooter=scooter,
-            ride=ride,
-            latitude=latitude,
-            longitude=longitude,
-            battery=scooter.battery,
-            device_status=scooter.device_status,
-            gps_board_connected=gps_board_connected,
-            gps_valid=data['gps_valid'],
-        )
-        announcement.save()
+    # code_63 -------------------------------------------------------------------------------
 
-        scooter.last_announce = announcement.time
-        scooter.save()
-        data = {'message': 'success: announce received',
-                'status': scooter.status,
-                }
-        return Response(data, status=HTTP_200_OK)
-        # return Response('announced', status=HTTP_200_OK)
-
-    else:
-        print(instance.errors)
-        return Response('announcement not valid', status=HTTP_400_BAD_REQUEST)
+    data = {'message': 'success: announce received',
+            'status': scooter.status,
+            'warning': error
+            }
+    return Response(data, status=HTTP_200_OK)
 
 
 @csrf_exempt

@@ -215,19 +215,32 @@ def start_ride_mobile_api(request):
         return user
 
     if 'qr_info' in request.POST:
-        scooter = get_object_or_404(Scooter, qr_info=request.POST['qr_info'])
-    elif 'device_code' in request.POST:
-        scooter = get_object_or_404(Scooter, device_code=request.POST['device_code'])
-    else:
-        data = {
-            "message": "error: no qr_info or device_code was found in request",
-            "message_fa": "خطا: کد تصویری یا کد دستگاه در درخواست یافت نشد",
-            "code": 201,
-            "status": 400,
-        }
-        return Response(data, HTTP_400_BAD_REQUEST)
+        # scooter = get_object_or_404(Scooter, qr_info=request.POST['qr_info'])
+        scooter = Scooter.objects.filter(qr_info=request.POST['qr_info']).first()
+        if scooter:
+            return scooter.start_ride(user=user)
+    if 'device_code' in request.POST:
+        # scooter = get_object_or_404(Scooter, device_code=request.POST['device_code'])
+        scooter = Scooter.objects.filter(device_code=request.POST['device_code']).first()
+        if scooter:
+            return scooter.start_ride(user=user)
+        else:
+            data = {
+                "message": "error: invalid QR or device code",
+                "message_fa": "خطا: کد تصویری یا کد دستگاه نامعتبر",
+                "code": 200,
+                "status": 404,
+            }
+            return Response(data, HTTP_404_NOT_FOUND)
+
+    data = {
+        "message": "error: no qr_info or device_code was found in request",
+        "message_fa": "خطا: کد تصویری یا کد دستگاه در درخواست یافت نشد",
+        "code": 201,
+        "status": 400,
+    }
+    return Response(data, HTTP_400_BAD_REQUEST)
     # scooter = get_object_or_404(Scooter, Q(qr_info=qr_info) or Q(device_code=device_code))
-    return scooter.start_ride(user=user)
 
 
 @csrf_exempt

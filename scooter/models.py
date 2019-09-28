@@ -80,8 +80,8 @@ class Choices:
     scooter_status_choices = (
         (1, 'ready'),
         (2, 'occupied'),
-        (3, 'low_battery'),
-        (4, 'unavailable'),
+        # (3, 'low_battery'),
+        # (4, 'unavailable'),
         # (5, ''),
         # (6, ''),
     )
@@ -131,38 +131,60 @@ class Scooter(models.Model):
 
     def start_ride(self, user):
         if user.profile.current_ride is not None:
-            data = {'error': 'error: user is riding'}
+            data = {
+                "message": "error: user is already on a ride",
+                "message_fa": "خطا: کاربر در حال سفر است",
+                "code": 202,
+                "status": 400,
+            }
             return Response(data, status=HTTP_400_BAD_REQUEST)
 
         if self.status != 1:
-            data = {'error': 'error: device not free'}
+            data = {
+                "message": "error: device is not free",
+                "message_fa": "خطا: دستگاه در حالت آزاد نمی باشد",
+                "code": 203,
+                "status": 400,
+            }
             return Response(data, status=HTTP_400_BAD_REQUEST)
 
         # modify maybe: (if status == LOW_BATTERY)
         if self.battery < minimum_battery and self.is_operational:
-            data = {'error': 'error: device has low battery'}
-            return Response(data, status=HTTP_200_OK)
-
-        if user.profile.credit < user.profile.tariff.minimum_credit:
             data = {
-                # 'code': NOT_ENOUGH_CREDIT
-                'error': 'error: not enough credit'}
+                "message": "error: device has low battery",
+                "message_fa": "خطا: باتری دستگاه کم شارژ است",
+                "code": 204,
+                "status": 200,
+            }
             return Response(data, status=HTTP_200_OK)
 
         if every_n_minute_charging and user.profile.credit < user.profile.tariff.per_minute_price * payout_period_minutes:
             data = {
-                # 'code': NOT_ENOUGH_CREDIT
-                'error': 'error: not enough credit'}
+                "message": "error: not enough credit",
+                "message_fa": "خطا: اعتبار شما برای شروع سفر کافی نیست",
+                "code": 205,
+                "minimum_credit": user.profile.tariff.per_minute_price * payout_period_minutes,
+                "status": 200,
+            }
+            return Response(data, status=HTTP_200_OK)
+
+        if user.profile.credit < user.profile.tariff.minimum_credit:
+            data = {
+                "message": "error: not enough credit (tariff)",
+                "message_fa": "خطا: اعتبار شما برای شروع سفر کافی نیست (تعرفه)",
+                "code": 206,
+                "minimum_credit": user.profile.tariff.minimum_credit,
+                "status": 200,
+            }
             return Response(data, status=HTTP_200_OK)
 
         ride = Ride.initiate_ride(user=user, scooter=self)
-        self.status = 2
-        self.save()
-        self.turn_on()
-        data = {'message': 'success: device activated',
-                # 'device_id': device_id,
-                'ride_id': ride.id}
-
+        data = {
+            "message": "success: activating device",
+            "message_fa": "موفق: در حال روشن کردن دستگاه",
+            "code": 100,
+            "status": 200,
+        }
         return Response(data, status=HTTP_200_OK)
 
     # modify
@@ -176,30 +198,6 @@ class Scooter(models.Model):
         # sms.lock_unlock(self.phone_number, True, self.device_code)
         mqtt.send_mqtt('scooter/' + str(self.phone_number), 'lock')
         mqtt.send_mqtt('scooter/' + str(self.device_code), 'lock')
-
-    # def announce(self, request):
-    #     # update self with new info
-    #     data = request.GET.copy()
-    #     del data['device_code']
-    #     instance = ScooterAnnounceSerializer(instance=self, data=data)
-    #     if instance.is_valid():
-    #         print('valid announcement')
-    #         instance.save()
-    #         announcement = Announcement(
-    #             scooter=self,
-    #             latitude=self.latitude,
-    #             longitude=self.longitude,
-    #             battery=self.battery,
-    #             status=self.status,
-    #         )
-    #         announcement.save()
-    #
-    #         self.last_announce = announcement.time
-    #         self.save()
-    #         return Response('announced', status=HTTP_200_OK)
-    #     else:
-    #         print(instance.errors)
-    #         return Response('announcement not valid', status=HTTP_400_BAD_REQUEST)
 
     @staticmethod
     def nearby_devices(latitude, longitude, radius, user):
@@ -244,16 +242,13 @@ class Ride(models.Model):
                     is_finished=False)
         ride.save()
         ride.reverse_started_ride(ride_id=ride.id)
-        # modify: this should be moved to acknowledged ride
-        # if every_n_minute_charging:
-        #     print("this is initiate ride method for ride " + str(ride.id))
-        #     ride.count_for_next_payout(ride.id)
-        #     ride.subtract_payout_of_period()
 
         user.profile.current_ride = ride
         user.profile.save()
         scooter.current_ride = ride
+        scooter.status = 2
         scooter.save()
+        scooter.turn_on()
         return ride
 
     def initiate_payout_counter(self):
@@ -270,10 +265,20 @@ class Ride(models.Model):
 
     def end_ride(self, is_reversed=False):
         if self.is_finished:
-            data = {'error': 'error: ride is finished'}
+            data = {
+                "message": "error: ride is finished",
+                "message_fa": "خطا: سفر به پایان رسیده است",
+                "code": 202,
+                "status": 400,
+            }
             return Response(data, status=HTTP_400_BAD_REQUEST)
         if self.scooter.status != 2:
-            data = {'error': 'error: device not occupied'}
+            data = {
+                "message": "error: device not occupied",
+                "message_fa": "خطا: دستگاه در حال استفاده نمی باشد",
+                "code": 203,
+                "status": 400,
+            }
             return Response(data, status=HTTP_400_BAD_REQUEST)
         self.end_point_latitude = self.scooter.latitude
         self.end_point_longitude = self.scooter.longitude
@@ -292,10 +297,12 @@ class Ride(models.Model):
         self.scooter.status = 1
         self.scooter.save()
         self.scooter.turn_off()
-        data = {'message': 'success: device deactivated',
-                # 'device_id': device_id
-                'ride_id': self.id
-                }
+        data = {
+            "message": "success: deactivating device",
+            "message_fa": "موفق: در حال خاموش کردن دستگاه",
+            "code": 100,
+            "status": 200,
+        }
         return Response(data, status=HTTP_200_OK)
 
     def get_duration_in_seconds(self):
@@ -408,6 +415,3 @@ class Announcement(models.Model):
     ack_start = models.BooleanField(default=False)
     ack_end = models.BooleanField(default=False)
     alerted = models.BooleanField(default=False)
-
-#     modify
-#     def create(self):

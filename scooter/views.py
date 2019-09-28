@@ -195,17 +195,20 @@ def start_ride_mobile_api(request):
     user = authenticate(request)
     if not isinstance(user, User):
         return user
-    try:
-        qr_info = request.POST['qr_info']
-        scooter = get_object_or_404(Scooter, qr_info=qr_info)
-    except:
-        device_code = request.POST['device_code']
-        scooter = get_object_or_404(Scooter, device_code=device_code)
-    # scooter = Scooter.objects.filter(Q(qr_info=qr_info) or Q(device_code=device_code)).first()
+
+    if 'qr_info' in request.POST:
+        scooter = get_object_or_404(Scooter, qr_info=request.POST['qr_info'])
+    elif 'device_code' in request.POST:
+        scooter = get_object_or_404(Scooter, device_code=request.POST['device_code'])
+    else:
+        data = {
+            "message": "error: no qr_info or device_code was found in request",
+            "message_fa": "خطا: کد تصویری یا کد دستگاه در درخواست یافت نشد",
+            "code": 201,
+            "status": 400,
+        }
+        return Response(data, HTTP_400_BAD_REQUEST)
     # scooter = get_object_or_404(Scooter, Q(qr_info=qr_info) or Q(device_code=device_code))
-    # if not scooter:
-    #     data = {'error': 'error: not a valid qr code'}
-    #     return Response(data, status=HTTP_404_NOT_FOUND)
     return scooter.start_ride(user=user)
 
 
@@ -243,23 +246,21 @@ def verify_ride_mobile_api(request):
 
 @csrf_exempt
 @api_view(["POST"])
-# @permission_classes((AllowAny,))
 def end_ride_mobile_api(request):
     user = authenticate(request)
     if not isinstance(user, User):
         return user
 
-    # ride_id = request.POST['ride_id']
-    # print(ride_id)
-    # print(type(ride_id))
-    # ride = Ride.objects.get(pk=ride_id)
-    # if not ride.user == user:
-    #     data = {'error': 'error: you can only end your own ride'}
-    #     return Response(data, status=HTTP_400_BAD_REQUEST)
-
-    # ride = Ride.objects.get(user=user, is_finished=False)
-    ride = get_object_or_404(Ride, user=user, is_finished=False)
-    # ride = my_get_object_or_return_404(Ride, user=user, is_finished=False)
+    ride = user.profile.current_ride
+    if not ride:
+        data = {
+            "message": "error: user is not riding",
+            "message_fa": "خطا: کاربر در حال سفر نیست",
+            "code": 201,
+            "status": 400,
+        }
+        return Response(data, status=HTTP_400_BAD_REQUEST)
+    # ride = get_object_or_404(Ride, user=user, is_finished=False)
     return ride.end_ride()
 
 

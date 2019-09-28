@@ -15,7 +15,8 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.status import (
     HTTP_400_BAD_REQUEST,
     HTTP_404_NOT_FOUND,
-    HTTP_200_OK
+    HTTP_200_OK,
+    HTTP_401_UNAUTHORIZED,
 )
 
 # from ride.models import Ride
@@ -32,13 +33,20 @@ SLEEP_TIME = 1
 
 
 def authenticate(request):
+    if not ('HTTP_AUTHORIZATION' in request.META and 'phone' in request.POST):
+        data = {
+            "message": "error: token or phone not found",
+            "message_fa": "خطا: توکن یا شماره پیدا نشد",
+            "code": 301,
+            "status": 401,
+        }
+        return Response(data, status=HTTP_401_UNAUTHORIZED)
     token = request.META['HTTP_AUTHORIZATION']
     token = str(token).split(' ')[1]
     phone = request.POST['phone']
-
-    if len(token) != 40:
-        data = {'error': 'error: token or phone not found'}
-        return Response(data, status=HTTP_404_NOT_FOUND)
+    # if len(token) != 40:
+    #     data = {'error': 'error: token or phone not found'}
+    #     return Response(data, status=HTTP_404_NOT_FOUND)
 
     owner_of_phone = User.objects.filter(phone=phone).first()
     owner_of_token = Token.objects.filter(key=token).first()
@@ -79,13 +87,23 @@ def authenticate(request):
         # till here ============================================= 55
 
         # Temporary : uncommented already the next 2 lines
-        data = {'error': 'error: token or phone not found'}
-        return Response(data, status=HTTP_404_NOT_FOUND)
+        data = {
+            "message": "error: invalid credentials",
+            "message_fa": "خطا: هویت غیر معتبر",
+            "code": 300,
+            "status": 401,
+        }
+        return Response(data, status=HTTP_401_UNAUTHORIZED)
     if owner_of_token.user == owner_of_phone:
         return owner_of_phone
     else:
-        data = {'error': 'error: invalid credentials'}
-        return Response(data, status=HTTP_400_BAD_REQUEST)
+        data = {
+            "message": "error: invalid credentials",
+            "message_fa": "خطا: هویت غیر معتبر",
+            "code": 300,
+            "status": 401,
+        }
+        return Response(data, status=HTTP_401_UNAUTHORIZED)
 
 
 @csrf_exempt

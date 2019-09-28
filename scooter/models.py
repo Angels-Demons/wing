@@ -182,6 +182,8 @@ class Scooter(models.Model):
         data = {
             "message": "success: activating device",
             "message_fa": "موفق: در حال روشن کردن دستگاه",
+            # for compatibility
+            "ride_id": ride.id,
             "code": 100,
             "status": 200,
         }

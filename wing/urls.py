@@ -26,6 +26,10 @@ urlpatterns = [
     path('zarinpal/', include('zarinpal.urls')),
     # path('websocket/', include('example.urls')),
 ]
-tasks = Task.objects.filter(task_name="scooter.models.check_for_unattached_scooters")
-tasks.delete()
+
+try:
+    tasks = Task.objects.filter(task_name="scooter.models.check_for_unattached_scooters")
+    tasks.delete()
+except:
+    pass
 check_for_unattached_scooters(0)

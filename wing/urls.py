@@ -30,6 +30,7 @@ urlpatterns = [
 try:
     tasks = Task.objects.filter(task_name="scooter.models.check_for_unattached_scooters")
     tasks.delete()
+    check_for_unattached_scooters(0)
 except:
     pass
-check_for_unattached_scooters(0)
+

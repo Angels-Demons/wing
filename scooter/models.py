@@ -266,22 +266,22 @@ class Ride(models.Model):
         return label
 
     def end_ride(self, is_reversed=False):
-        if self.is_finished:
-            data = {
-                "message": "error: ride is finished",
-                "message_fa": "خطا: سفر به پایان رسیده است",
-                "code": 202,
-                "status": 400,
-            }
-            return Response(data, status=HTTP_400_BAD_REQUEST)
-        if self.scooter.status != 2:
-            data = {
-                "message": "error: device not occupied",
-                "message_fa": "خطا: دستگاه در حال استفاده نمی باشد",
-                "code": 203,
-                "status": 400,
-            }
-            return Response(data, status=HTTP_400_BAD_REQUEST)
+        # if self.is_finished:
+        #     data = {
+        #         "message": "error: ride is finished",
+        #         "message_fa": "خطا: سفر به پایان رسیده است",
+        #         "code": 202,
+        #         "status": 400,
+        #     }
+        #     return Response(data, status=HTTP_400_BAD_REQUEST)
+        # if self.scooter.status != 2:
+        #     data = {
+        #         "message": "error: device not occupied",
+        #         "message_fa": "خطا: دستگاه در حال استفاده نمی باشد",
+        #         "code": 203,
+        #         "status": 400,
+        #     }
+        #     return Response(data, status=HTTP_400_BAD_REQUEST)
         self.end_point_latitude = self.scooter.latitude
         self.end_point_longitude = self.scooter.longitude
         self.end_time = datetime.datetime.now()

@@ -1,5 +1,5 @@
 import datetime
-
+import logging
 from background_task import background
 from django.db.models import SET_NULL
 from pytz import UTC
@@ -138,6 +138,22 @@ class Scooter(models.Model):
                 "status": 400,
             }
             return Response(data, status=HTTP_400_BAD_REQUEST)
+        
+        # MODIFY: REDUNDANCY 55 =====================================================
+        current_user_rides = Ride.objects.filter(user=user, is_finished=False)
+        if current_user_rides.count() != 0:
+            for ride in current_user_rides:
+                ride.end_ride()
+            logging.error("start_ride for User(%s) failed with %d unfinished rides (ended manually)"
+                          % (user.phone, current_user_rides.count()))
+            data = {
+                "message": "error: user has unfinished ride",
+                "message_fa": "خطا: کاربر سفر ناتمام دارد",
+                "code": 901,
+                "status": 400,
+            }
+            return Response(data, status=HTTP_400_BAD_REQUEST)
+        # MODIFY: REDUNDANCY 55 =====================================================
 
         if self.status != 1:
             data = {

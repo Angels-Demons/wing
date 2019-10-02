@@ -88,8 +88,8 @@ def authenticate(request):
 
         # Temporary : uncommented already the next 2 lines
         data = {
-            "message": "error: invalid credentials",
-            "message_fa": "خطا: هویت غیر معتبر",
+            "message": "error: invalid/outdated credentials",
+            "message_fa": "خطا: هویت غیر معتبر/منقضی",
             "code": 300,
             "status": 401,
         }
@@ -98,8 +98,8 @@ def authenticate(request):
         return owner_of_phone
     else:
         data = {
-            "message": "error: invalid credentials",
-            "message_fa": "خطا: هویت غیر معتبر",
+            "message": "error: invalid/outdated credentials",
+            "message_fa": "خطا: هویت غیر معتبر/منقضی",
             "code": 300,
             "status": 401,
         }
@@ -304,11 +304,3 @@ def my_profile_api(request):
         return user
     # return MyStateSerializer.make_my_state(user.profile)
     return Response(ProfileSerializer(user.profile).data)
-
-
-# class InfoView(APIView):
-#     def post(self, request):
-#         print('im here')
-#         # phone = request.POST['phone']
-#         # token = request.POST['token']
-#         return Response('hey')

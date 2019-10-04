@@ -1,7 +1,7 @@
 import datetime
 import random
 import time
-
+from api import log
 from django.shortcuts import get_object_or_404
 from rest_framework.permissions import AllowAny
 
@@ -284,6 +284,24 @@ def end_ride_mobile_api(request):
 
     ride = user.profile.current_ride
     if not ride:
+        # MODIFY: REDUNDANCY 65 =====================================================
+        current_user_rides = Ride.objects.filter(user=user, is_finished=False)
+        if current_user_rides:
+            for ride in current_user_rides:
+                ride.end_ride()
+            logging.error("end_ride for User(%s) did not find current_ride but ended %d unfinished rides manually"
+                          % (user.phone, current_user_rides.count()))
+            log.error("end_ride did not find current_ride but ended %d unfinished rides manually"
+                      % current_user_rides.count(), user)
+
+            data = {
+                "message": "error: user has unfinished ride",
+                "message_fa": "خطا: کاربر سفر ناتمام دارد",
+                "code": 901,
+                "status": 400,
+            }
+            return Response(data, status=HTTP_400_BAD_REQUEST)
+        # MODIFY: REDUNDANCY 65 =====================================================
         data = {
             "message": "error: user is not riding",
             "message_fa": "خطا: کاربر در حال سفر نیست",
@@ -302,5 +320,8 @@ def my_profile_api(request):
     user = authenticate(request)
     if not isinstance(user, User):
         return user
+    if 'app_version' in request.POST:
+        user.profile.app_version = request.POST['app_version']
+        user.profile.save()
     # return MyStateSerializer.make_my_state(user.profile)
     return Response(ProfileSerializer(user.profile).data)

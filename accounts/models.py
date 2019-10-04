@@ -144,6 +144,7 @@ class Profile(models.Model):
     name = models.CharField(max_length=255, blank=True)
     email = models.EmailField(default='abc@gmail.com')
     tariff = models.ForeignKey(Tariff, on_delete=models.SET_DEFAULT, default=1)
+    app_version = models.CharField(max_length=255, default="0.0.0")
     timestamp = models.DateTimeField(auto_now_add=True, null=True, editable=False)
 
     def __str__(self):

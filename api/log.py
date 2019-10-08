@@ -5,7 +5,7 @@ def log(subject, message, user):
     f = open("log.txt", "a")
     f.write(datetime.datetime.now().__str__() + ": ")
     f.write(subject + "\t: ")
-    f.write(user.phone + " (%s): " % user.profile.app_version + "\t")
+    f.write(str(user.phone) + " (%s): " % user.profile.app_version + "\t")
     f.write(message)
     f.write("\n")
     f.close()

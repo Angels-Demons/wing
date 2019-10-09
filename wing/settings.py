@@ -55,7 +55,21 @@ INSTALLED_APPS = [
     'background_task',
     # 'channels',
     'fleet',
+    'log_viewer',
 ]
+
+# modify maybe : log viewer ===========================================================
+# LOG_VIEWER_FILES = ['logfile1', 'logfile2', ...]
+LOG_VIEWER_FILES_DIR = os.path.join(BASE_DIR, '../logs')
+LOG_VIEWER_MAX_READ_LINES = 1000  # total log lines will be read
+LOG_VIEWER_PAGE_LENGTH = 25       # total log lines per-page
+
+# Optionally you can set the next variables in order to customize the admin:
+
+# LOG_VIEWER_FILE_LIST_TITLE = "Custom title"
+# LOG_VIEWER_FILE_LIST_STYLES = "/static/css/my-custom.css"
+# modify maybe : log viewer ===========================================================
+
 
 # added : web socket
 # ASGI_APPLICATION = 'wing.routing.application'
@@ -116,10 +130,21 @@ WSGI_APPLICATION = 'wing.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/2.0/ref/settings/#databases
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+#     }
+# }
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'wing',
+        'USER': 'root',
+        'PASSWORD': '0440542650ms',
+        # 'HOST': 'your_host_address',
+        # 'PORT': 'your_port',
     }
 }
 

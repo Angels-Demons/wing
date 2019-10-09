@@ -1,12 +1,12 @@
 import datetime
-import logging
+import traceback
 from api import log
 from background_task import background
 from django.db.models import SET_NULL
 from pytz import UTC
 
 from api import sms_send, sms, mqtt
-from django.db import models
+from django.db import models, transaction
 from accounts.models import User
 # from ride.models import Ride
 import geopy.distance
@@ -18,7 +18,8 @@ from rest_framework.response import Response
 from rest_framework.status import (
     HTTP_400_BAD_REQUEST,
     HTTP_404_NOT_FOUND,
-    HTTP_200_OK
+    HTTP_200_OK,
+    HTTP_500_INTERNAL_SERVER_ERROR,
 )
 
 seconds_in_a_minute = 60
@@ -144,7 +145,7 @@ class Scooter(models.Model):
         current_user_rides = Ride.objects.filter(user=user, is_finished=False)
         if current_user_rides:
             for ride in current_user_rides:
-                ride.end_ride()
+                ride.end_ride_atomic()
             # logging.error("start_ride for User(%s) failed with %d unfinished rides (ended manually)"
             #               % (user.phone, current_user_rides.count()))
             log.error("start_ride failed with %d unfinished rides (ended manually)"
@@ -221,6 +222,20 @@ class Scooter(models.Model):
         mqtt.send_mqtt('scooter/' + str(self.phone_number), 'lock')
         mqtt.send_mqtt('scooter/' + str(self.device_code), 'lock')
 
+    def start_ride_atomic(self, user):
+        try:
+            with transaction.atomic():
+                return self.start_ride(user=user)
+        except Exception as e:
+            log.error(message=e.__str__() + "\n" + str(traceback.format_exc()), user=user)
+            data = {
+                "message": "error: unknown error",
+                "message_fa": "خطا: خطای ناشناخته",
+                "code": 501,
+                "status": 500,
+            }
+            return Response(data, status=HTTP_500_INTERNAL_SERVER_ERROR)
+
     @staticmethod
     def nearby_devices(latitude, longitude, radius, user):
         nearby = []
@@ -239,7 +254,7 @@ class Scooter(models.Model):
 class Ride(models.Model):
     scooter = models.ForeignKey(Scooter, on_delete=models.CASCADE, editable=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE, editable=False)
-    price = models.PositiveSmallIntegerField(null=True, editable=False, blank=True)
+    price = models.PositiveIntegerField(null=True, editable=False, blank=True)
     start_time = models.DateTimeField(auto_now_add=True, editable=False)
     start_acknowledge_time = models.DateTimeField(null=True, editable=False, verbose_name='start ack')
     end_time = models.DateTimeField(null=True, editable=False)
@@ -270,6 +285,8 @@ class Ride(models.Model):
         scooter.current_ride = ride
         scooter.status = 2
         scooter.save()
+        # modify: make sure it works!
+        # transaction.on_commit(scooter.turn_on())
         scooter.turn_on()
         return ride
 
@@ -284,6 +301,20 @@ class Ride(models.Model):
         label += "device_code: " + str(self.scooter.device_code) + "\n"
         label += "ride_id: " + str(self.id)
         return label
+
+    def end_ride_atomic(self, is_reversed=False):
+        try:
+            with transaction.atomic():
+                return self.end_ride(is_reversed=is_reversed)
+        except Exception as e:
+            log.error(message=e.__str__() + "\n" + str(traceback.format_exc()), user=self.user)
+            data = {
+                "message": "error: unknown error",
+                "message_fa": "خطا: خطای ناشناخته",
+                "code": 501,
+                "status": 500,
+            }
+            return Response(data, status=HTTP_500_INTERNAL_SERVER_ERROR)
 
     def end_ride(self, is_reversed=False):
         # if self.is_finished:
@@ -330,7 +361,7 @@ class Ride(models.Model):
     def get_duration_in_seconds(self):
         # t_delta = (datetime.datetime.now().replace(tzinfo=None) - self.start_time.replace(tzinfo=None)).seconds
         # modify : this is always true. why?
-        print(self.start_acknowledge_time)
+        # print(self.start_acknowledge_time)
         if self.start_acknowledge_time is None:
             # print(self.start_acknowledge_time)
             # print('ride started but not acknowledged: return 0 for timer')
@@ -397,7 +428,7 @@ class Ride(models.Model):
         if self.user.profile.credit < period_price:
             self.is_terminated = True
             self.save()
-            self.end_ride()
+            self.end_ride_atomic()
         else:
             self.user.profile.credit -= period_price
             self.price += period_price
@@ -411,7 +442,7 @@ class Ride(models.Model):
         ride = Ride.objects.get(pk=ride_id)
         if ride.start_acknowledge_time is None:
             print("ride reversed due to no response from device")
-            ride.end_ride(is_reversed=True)
+            ride.end_ride_atomic(is_reversed=True)
 
     @staticmethod
     @background(schedule=payout_period_minutes * seconds_in_a_minute)

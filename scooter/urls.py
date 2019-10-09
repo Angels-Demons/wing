@@ -1,6 +1,7 @@
+from django.conf.urls import url
 from django.urls import path
 from scooter.views import nearby_devices_mobile_api, start_ride_mobile_api, end_ride_mobile_api, announce_api, \
-    my_profile_api, verify_ride_mobile_api
+    my_profile_api, ride_trajectory
 
 urlpatterns = [
     # path('inf/', InfoView, name='info'),
@@ -11,4 +12,6 @@ urlpatterns = [
     path('start_ride/', start_ride_mobile_api, name='start_ride'),
     # path('verify_ride/', verify_ride_mobile_api, name='verify_ride'),
     path('end_ride/', end_ride_mobile_api, name='end_ride'),
+
+    url(r'^ride_trajectory/(?P<ride_id>\d+)/', ride_trajectory, name='ride_trajectory'),
 ]

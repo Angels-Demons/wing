@@ -25,6 +25,7 @@ urlpatterns = [
     path('scooter/', include('scooter.urls')),
     path('zarinpal/', include('zarinpal.urls')),
     # path('websocket/', include('example.urls')),
+    path('admin/log_viewer/', include('log_viewer.urls')),
 ]
 
 try:

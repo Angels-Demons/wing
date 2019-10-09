@@ -1,8 +1,12 @@
 import datetime
 import random
 import time
+
+from django.contrib.auth.decorators import login_required, permission_required
+from gmplot import gmplot
+
 from api import log
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, render
 from rest_framework.permissions import AllowAny
 
 from accounts.models import User, UserManager, create_profile
@@ -157,7 +161,7 @@ def announce_api(request):
         except AttributeError as e:
             error += "invalid start ack"
 
-    elif announce.ack_end:
+    if announce.ack_end:
         try:
             ride = Ride.objects.filter(scooter=scooter, is_finished=True, end_acknowledge_time=None).last()
             ride.end_acknowledge_time = datetime.datetime.now()
@@ -218,12 +222,14 @@ def start_ride_mobile_api(request):
         # scooter = get_object_or_404(Scooter, qr_info=request.POST['qr_info'])
         scooter = Scooter.objects.filter(qr_info=request.POST['qr_info']).first()
         if scooter:
-            return scooter.start_ride(user=user)
+            return scooter.start_ride_atomic(user=user)
+            # return scooter.start_ride(user=user)
     if 'device_code' in request.POST:
         # scooter = get_object_or_404(Scooter, device_code=request.POST['device_code'])
         scooter = Scooter.objects.filter(device_code=request.POST['device_code']).first()
         if scooter:
-            return scooter.start_ride(user=user)
+            return scooter.start_ride_atomic(user=user)
+            # return scooter.start_ride(user=user)
         else:
             data = {
                 "message": "error: invalid QR or device code",
@@ -288,7 +294,7 @@ def end_ride_mobile_api(request):
         current_user_rides = Ride.objects.filter(user=user, is_finished=False)
         if current_user_rides:
             for ride in current_user_rides:
-                ride.end_ride()
+                ride.end_ride_atomic()
             logging.error("end_ride for User(%s) did not find current_ride but ended %d unfinished rides manually"
                           % (user.phone, current_user_rides.count()))
             log.error("end_ride did not find current_ride but ended %d unfinished rides manually"
@@ -310,7 +316,7 @@ def end_ride_mobile_api(request):
         }
         return Response(data, status=HTTP_400_BAD_REQUEST)
     # ride = get_object_or_404(Ride, user=user, is_finished=False)
-    return ride.end_ride()
+    return ride.end_ride_atomic()
 
 
 @csrf_exempt
@@ -325,3 +331,38 @@ def my_profile_api(request):
         user.profile.save()
     # return MyStateSerializer.make_my_state(user.profile)
     return Response(ProfileSerializer(user.profile).data)
+
+
+@login_required
+# @permission_required('zarinpal.top_up', login_url="/admin")
+def ride_trajectory(request, ride_id):
+    ride = Ride.objects.get(pk=ride_id)
+
+    latitude_list = []
+    longitude_list = []
+    print(ride.announcement_set.count())
+    for announce in ride.announcement_set.all():
+        latitude_list.append(float(announce.latitude))
+        longitude_list.append(float(announce.longitude))
+
+    # gmap3 = gmplot.GoogleMapPlotter(30.3164945,
+    #                                 78.03219179999999, 13)
+
+    gmap3 = gmplot.GoogleMapPlotter(35.801571, 51.491839, 20)
+    # scatter method of map object
+    # scatter points on the google map
+    gmap3.scatter(latitude_list, longitude_list, '# FF0000',
+                  size=40, marker=False)
+
+    # Plot method Draw a line in
+    # between given coordinates
+    gmap3.plot(latitude_list, longitude_list,
+               'cornflowerblue', edge_width=2.5)
+    # file_name = "/scooter/templates/scoooter/ride_trajectory/%s.html" % str(ride_id)
+    file_name = "%s.html" % str(ride_id)
+    # file_name = "/home/ubuntu/wing-server/production/wing/scooter/ride_trajectory/1.html"
+    # f = open(file_name, 'a')
+    # f.write("")
+    # f.close()
+    gmap3.draw(file_name)
+    return render(request, "scooter/ride_trajectory/1.html")

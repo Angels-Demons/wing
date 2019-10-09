@@ -75,7 +75,7 @@ def end_ride_manually(modeladmin, request, queryset):
     for ride in queryset:
         if ride.is_finished:
             continue
-        ride.end_ride()
+        ride.end_ride_atomic()
 
 
 end_ride_manually.short_description = "End selected rides manually"
@@ -83,6 +83,7 @@ end_ride_manually.short_description = "End selected rides manually"
 
 class RideAdmin(admin.ModelAdmin):
     list_display = ('id', 'scooter', 'user', 'price', 'is_finished', 'is_reversed', 'is_terminated',
+                    'trajectory',
                     'duration', 'distance',
                     'start_time', 'start_acknowledge_time',
                     'end_time', 'end_acknowledge_time',
@@ -91,6 +92,20 @@ class RideAdmin(admin.ModelAdmin):
     actions = [end_ride_manually]
     list_filter = ('is_reversed', 'is_terminated')
     search_fields = ('scooter__device_code', 'user__phone')
+
+    def trajectory(self, obj):
+        try:
+            link = "/../../../scooter/ride_trajectory/" + str(obj.id)
+            # link = reverse("admin:scooter_ride_change", args=[obj.current_ride.id])  # model name has to be lowercase
+            return format_html(
+                """<input type="button" style="margin:2px;2px;2px;2px;" value="%s" onclick = "location.href=\'%s\'"/>"""
+                % ("trajectory", link))
+        except Exception as e:
+            print(e)
+            return None
+
+    trajectory.allow_tags = True
+    # trajectory.label = "trajectory"
 
 
 admin.site.register(Scooter, ScooterAdmin)

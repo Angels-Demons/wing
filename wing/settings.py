@@ -53,9 +53,8 @@ INSTALLED_APPS = [
     'charging',
     # 'river',
     'background_task',
-    # 'channels',
     'fleet',
-    'log_viewer',
+    # 'log_viewer',
 ]
 
 # modify maybe : log viewer ===========================================================

@@ -1,11 +1,12 @@
 import datetime
 
 
-def log(subject, message, user):
+def log(subject, message, user=None):
     f = open("log.txt", "a")
     f.write(subject + "\t: ")
     f.write(datetime.datetime.now().__str__() + ": ")
-    f.write(str(user.phone) + " (%s): " % user.profile.app_version + "\t")
+    if user:
+        f.write(str(user.phone) + " (%s): " % user.profile.app_version + "\t")
     f.write(message)
     f.write("\n")
     f.close()

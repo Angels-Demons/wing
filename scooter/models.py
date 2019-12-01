@@ -66,7 +66,8 @@ def check_for_unattached_scooters(counter=0):
     occupied_scooters = Scooter.objects.filter(status=2)
     for scooter in occupied_scooters:
         if scooter.current_ride is None:
-            print("Checker detected a buggy scooter (occupied with None current_ride) " + str(scooter.device_code))
+            print("Buggy scooter (occupied with None current_ride) fixed. device_code: " + str(scooter.device_code))
+            log.error("Buggy scooter (occupied with None current_ride) fixed. device_code: " + str(scooter.device_code))
             scooter.status = 1
             scooter.save()
         # elif Ride.objects.filter(scooter=scooter, is_finished=False).count() != 1:

@@ -143,6 +143,7 @@ class Scooter(models.Model):
     gps_board_connected = models.BooleanField(default=True, verbose_name="GPS Board")
     gps_valid = models.BooleanField(default=True)
     alerted = models.BooleanField(default=False)
+    imei = models.BigIntegerField(default=0)
 
     # def save(self, *args, **kwargs):
     #     ride = Ride.objects.filter(scooter=self, is_finished=False).first()
@@ -239,16 +240,16 @@ class Scooter(models.Model):
         # sms.lock_unlock(self.phone_number, False, self.device_code)
         mqtt.send_mqtt('scooter/' + str(self.phone_number), 'unlock')
         mqtt.send_mqtt('scooter/' + str(self.device_code), 'unlock')
-        if self.device_code > 9999999:
-            unlock(str(self.device_code))
+        if self.imei > 0:
+            unlock(str(self.imei))
 
     # modify
     def turn_off(self):
         # sms.lock_unlock(self.phone_number, True, self.device_code)
         mqtt.send_mqtt('scooter/' + str(self.phone_number), 'lock')
         mqtt.send_mqtt('scooter/' + str(self.device_code), 'lock')
-        if self.device_code > 9999999:
-            lock(str(self.device_code))
+        if self.imei > 0:
+            lock(str(self.imei))
 
     def start_ride_atomic(self, user):
         try:

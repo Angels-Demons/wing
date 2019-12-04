@@ -1,4 +1,5 @@
 import datetime
+import socket
 import traceback
 from api import log
 from background_task import background
@@ -98,9 +99,31 @@ class Site(models.Model):
         return self.name
 
 
+def lock(IMEI):
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server_address = ('localhost', 1234)
+    sock.connect(server_address)
+    # token,lock/unlock,IMEI
+    token = b'afvafvafsdvaf'
+    message = token + b',' + b'lock' + b',' + IMEI.encode()
+    print('sending {!r}'.format(message))
+    sock.sendall(message)
+
+
+def unlock(IMEI):
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server_address = ('localhost', 1234)
+    sock.connect(server_address)
+    # token,lock/unlock,IMEI
+    token = b'afvafvafsdvaf'
+    message = token + b',' + b'unlock' + b',' + IMEI.encode()
+    print('sending {!r}'.format(message))
+    sock.sendall(message)
+
+
 class Scooter(models.Model):
     phone_number = models.BigIntegerField(unique=True)
-    device_code = models.PositiveIntegerField(unique=True)
+    device_code = models.BigIntegerField(unique=True)
     current_ride = models.OneToOneField('scooter.Ride', null=True, blank=True, on_delete=SET_NULL, editable=True, related_name="current_ride")
     qr_info = models.CharField(max_length=255, null=True, unique=True)
     # rider = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
@@ -216,12 +239,16 @@ class Scooter(models.Model):
         # sms.lock_unlock(self.phone_number, False, self.device_code)
         mqtt.send_mqtt('scooter/' + str(self.phone_number), 'unlock')
         mqtt.send_mqtt('scooter/' + str(self.device_code), 'unlock')
+        if self.device_code > 9999999:
+            unlock(str(self.device_code))
 
     # modify
     def turn_off(self):
         # sms.lock_unlock(self.phone_number, True, self.device_code)
         mqtt.send_mqtt('scooter/' + str(self.phone_number), 'lock')
         mqtt.send_mqtt('scooter/' + str(self.device_code), 'lock')
+        if self.device_code > 9999999:
+            lock(str(self.device_code))
 
     def start_ride_atomic(self, user):
         try:

@@ -124,6 +124,7 @@ def unlock(IMEI):
 class Scooter(models.Model):
     phone_number = models.BigIntegerField(unique=True)
     device_code = models.BigIntegerField(unique=True)
+    imei = models.BigIntegerField(unique=True, null=True, blank=True)
     current_ride = models.OneToOneField('scooter.Ride', null=True, blank=True, on_delete=SET_NULL, editable=True, related_name="current_ride")
     qr_info = models.CharField(max_length=255, null=True, unique=True)
     # rider = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)

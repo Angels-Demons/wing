@@ -116,7 +116,7 @@ def authenticate(request):
 def announce_api(request):
     data = request.GET.copy()
     device_code = data['device_code']
-    if device_code < 9999999:
+    if int(device_code) < 9999999:
         scooter = get_object_or_404(Scooter, device_code=device_code)
     else:
         scooter = get_object_or_404(Scooter, imei=device_code)

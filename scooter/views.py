@@ -320,6 +320,7 @@ def end_ride_mobile_api(request):
         return Response(data, status=HTTP_400_BAD_REQUEST)
     # ride = get_object_or_404(Ride, user=user, is_finished=False)
     if ride.scooter.type == DeviceType.Bicycle.value and ride.scooter.device_status == Status.Occupied.value:
+        ride.scooter.turn_off()
         data = {
             "message": "error: lock the bike and retry again",
             "message_fa": "خطا: ابتدا قفل دوچرخه را ببندید و دوباره تلاش کنید",

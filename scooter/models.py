@@ -276,7 +276,7 @@ class Scooter(models.Model):
             raise ValueError("invalid device type")
 
     def start_ride_atomic(self, user):
-        if self.type == DeviceType.Bicycle.value and self.device_status == Status.Occupied:
+        if self.type == DeviceType.Bicycle.value and self.device_status == Status.Occupied.value:
             data = {
                 "message": "error: bike is not locked",
                 "message_fa": "خطا: قفل دوچرخه باز است!",

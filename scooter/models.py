@@ -1,6 +1,8 @@
 import datetime
 import socket
 import traceback
+from enum import Enum
+
 from api import log
 from background_task import background
 from django.db.models import SET_NULL
@@ -80,6 +82,11 @@ def check_for_unattached_scooters(counter=0):
     check_for_unattached_scooters(counter+1)
 
 
+class DeviceType(Enum):
+    Scooter = 1
+    Bicycle = 2
+
+
 class Choices:
     scooter_status_choices = (
         (1, 'ready'),
@@ -88,6 +95,11 @@ class Choices:
         # (4, 'unavailable'),
         # (5, ''),
         # (6, ''),
+    )
+
+    device_type_choices = (
+        (DeviceType.Scooter.value, DeviceType.Scooter.name),
+        (DeviceType.Bicycle.value, DeviceType.Bicycle.name),
     )
 
 
@@ -122,6 +134,7 @@ def unlock(IMEI):
 
 
 class Scooter(models.Model):
+    type = models.PositiveSmallIntegerField(choices=Choices.device_type_choices, default=DeviceType.Scooter.value)
     phone_number = models.BigIntegerField(unique=True)
     device_code = models.BigIntegerField(unique=True)
     imei = models.BigIntegerField(unique=True, null=True, blank=True)
@@ -237,19 +250,25 @@ class Scooter(models.Model):
 
     # modify
     def turn_on(self):
-        # sms.lock_unlock(self.phone_number, False, self.device_code)
-        mqtt.send_mqtt('scooter/' + str(self.phone_number), 'unlock')
-        mqtt.send_mqtt('scooter/' + str(self.device_code), 'unlock')
-        if self.device_code > 999999:
-            unlock(str(self.device_code))
+        if self.type == DeviceType.Scooter.value:
+            # sms.lock_unlock(self.phone_number, False, self.device_code)
+            mqtt.send_mqtt('scooter/' + str(self.phone_number), 'unlock')
+            mqtt.send_mqtt('scooter/' + str(self.device_code), 'unlock')
+        elif self.type == DeviceType.Bicycle.value:
+            unlock(str(self.imei))
+        else:
+            raise ValueError("invalid device type")
 
     # modify
     def turn_off(self):
-        # sms.lock_unlock(self.phone_number, True, self.device_code)
-        mqtt.send_mqtt('scooter/' + str(self.phone_number), 'lock')
-        mqtt.send_mqtt('scooter/' + str(self.device_code), 'lock')
-        if self.imei > 999999:
-            lock(str(self.device_code))
+        if self.type == DeviceType.Scooter.value:
+            # sms.lock_unlock(self.phone_number, True, self.device_code)
+            mqtt.send_mqtt('scooter/' + str(self.phone_number), 'lock')
+            mqtt.send_mqtt('scooter/' + str(self.device_code), 'lock')
+        elif self.type == DeviceType.Bicycle.value:
+            lock(str(self.imei))
+        else:
+            raise ValueError("invalid device type")
 
     def start_ride_atomic(self, user):
         try:

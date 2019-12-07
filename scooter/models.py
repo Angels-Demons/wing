@@ -291,7 +291,7 @@ class Scooter(models.Model):
         if ride:
             nearby.append(ride.scooter)
             return nearby
-        scooters = Scooter.objects.all()
+        scooters = Scooter.objects.filter(is_operational=True)
         for scooter in scooters:
             if abs((scooter.latitude + scooter.longitude) - (Decimal(latitude) + Decimal(longitude))) < 2 * Decimal(
                     radius):
@@ -327,7 +327,6 @@ class Ride(models.Model):
                     is_finished=False)
         ride.save()
         ride.reverse_started_ride(ride_id=ride.id)
-
         user.profile.current_ride = ride
         user.profile.save()
         scooter.current_ride = ride

@@ -28,7 +28,7 @@ from api.my_http import my_get_object_or_404, my_get_object_or_return_404
 from scooter.Serializers import ScooterSerializer, ScooterAnnounceSerializer, ProfileSerializer,\
     ScooterAnnounceSerializerFakeLocation, AnnounceSerializer
 # from scooter import funcs
-from scooter.models import Scooter, Ride, Announcement
+from scooter.models import Scooter, Ride, Announcement, DeviceType, Status
 import logging
 from django.db.models import Q
 
@@ -319,6 +319,14 @@ def end_ride_mobile_api(request):
         }
         return Response(data, status=HTTP_400_BAD_REQUEST)
     # ride = get_object_or_404(Ride, user=user, is_finished=False)
+    if ride.scooter.type == DeviceType.Bicycle.value and ride.scooter.device_status == Status.Occupied:
+        data = {
+            "message": "error: lock the bike and retry again",
+            "message_fa": "خطا: ابتدا قفل دوچرخه را ببندید و دوباره تلاش کنید",
+            "code": 211,
+            "status": 400,
+        }
+        return Response(data, status=HTTP_400_BAD_REQUEST)
     return ride.end_ride_atomic()
 
 

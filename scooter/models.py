@@ -87,10 +87,15 @@ class DeviceType(Enum):
     Bicycle = 2
 
 
+class Status(Enum):
+    Ready = 1
+    Occupied = 2
+
+
 class Choices:
     scooter_status_choices = (
-        (1, 'ready'),
-        (2, 'occupied'),
+        (Status.Ready.value, Status.Ready.name),
+        (Status.Occupied.value, Status.Occupied.name),
         # (3, 'low_battery'),
         # (4, 'unavailable'),
         # (5, ''),
@@ -271,6 +276,14 @@ class Scooter(models.Model):
             raise ValueError("invalid device type")
 
     def start_ride_atomic(self, user):
+        if self.type == DeviceType.Bicycle.value and self.device_status == Status.Occupied:
+            data = {
+                "message": "error: bike is not locked",
+                "message_fa": "خطا: قفل دوچرخه باز است!",
+                "code": 211,
+                "status": 400,
+            }
+            return Response(data, status=HTTP_400_BAD_REQUEST)
         try:
             with transaction.atomic():
                 return self.start_ride(user=user)

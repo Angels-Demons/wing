@@ -343,7 +343,7 @@ def my_profile_api(request):
         user.profile.save()
 
     if 'site' and 'name' and 'code' in request.POST:
-        if request.POST['site'] == 0:
+        if int(request.POST['site']) == 0:
             user.profile.site = None
             user.profile.member_code = None
             user.profile.save()

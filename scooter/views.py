@@ -343,10 +343,15 @@ def my_profile_api(request):
         user.profile.save()
 
     if 'site' and 'name' and 'code' in request.POST:
-        user.profile.site_id = request.POST['site']
-        user.profile.name = request.POST['name']
-        user.profile.member_code = request.POST['code']
-        user.profile.save()
+        if request.POST['site'] == 0:
+            user.profile.site = None
+            user.profile.member_code = None
+            user.profile.save()
+        else:
+            user.profile.site_id = Site.objects.get(id=request.POST['site']).id
+            user.profile.name = request.POST['name']
+            user.profile.member_code = request.POST['code']
+            user.profile.save()
 
     # return MyStateSerializer.make_my_state(user.profile)
     return Response(ProfileSerializer(user.profile).data)

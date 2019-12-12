@@ -44,7 +44,7 @@ class IsAliveFilter(admin.SimpleListFilter):
 
 
 class ScooterAdmin(admin.ModelAdmin):
-    list_display = ('type', 'phone_number', 'device_code', '_current_ride', 'latitude', 'longitude',
+    list_display = ('device_code', 'type', 'site', 'phone_number', '_current_ride', 'latitude', 'longitude',
                     'site', 'battery', 'status', 'device_status', 'alerted',
                     'alive', 'gps_board_connected', 'gps_valid',
                     'qr_info',

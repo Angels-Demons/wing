@@ -249,7 +249,14 @@ class Scooter(models.Model):
             # for compatibility
             "ride_id": ride.id,
             "code": 100,
-            "status": 200,
+            # "status": 200,
+
+            "device_code": ride.scooter.device_code,
+            "latitude": ride.scooter.latitude,
+            "longitude": ride.scooter.longitude,
+            "battery": ride.scooter.battery,
+            "type": ride.scooter.type,
+            "status": ride.scooter.status
         }
         return Response(data, status=HTTP_200_OK)
 

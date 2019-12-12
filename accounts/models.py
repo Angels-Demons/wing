@@ -8,7 +8,6 @@ from django.db.models import SET_NULL
 import django.utils.timezone
 
 from charging.models import Tariff
-# from scooter.models import Ride
 
 
 def _user_has_perm(user, perm, obj):
@@ -129,10 +128,12 @@ class User(AbstractBaseUser, PermissionsMixin):
         return _user_has_module_perms(self, app_label)
 
 
-def create_profile(user, tariff_id=1):
+def create_profile(user, tariff_id=1, site_id=None):
     profile = Profile(user=user)
     profile.tariff_id = tariff_id
     profile.credit = profile.tariff.initial_credit
+    if site_id:
+        profile.site_id = site_id
     profile.save()
     return profile
 
@@ -141,10 +142,12 @@ class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, editable=False)
     credit = models.IntegerField(default=0)
     current_ride = models.OneToOneField('scooter.Ride', null=True, blank=True, on_delete=SET_NULL, editable=True)
-    name = models.CharField(max_length=255, blank=True)
+    name = models.CharField(max_length=255, blank=True, null=True)
     email = models.EmailField(default='abc@gmail.com')
     tariff = models.ForeignKey(Tariff, on_delete=models.SET_DEFAULT, default=1)
     app_version = models.CharField(max_length=255, default="0.0.0")
+    site = models.ForeignKey('scooter.Site', on_delete=models.SET_NULL, null=True, blank=True)
+    member_code = models.CharField(max_length=255, blank=True, null=True)
     timestamp = models.DateTimeField(auto_now_add=True, null=True, editable=False)
 
     def __str__(self):

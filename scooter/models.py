@@ -150,7 +150,7 @@ class Scooter(models.Model):
     # has internet package
     latitude = models.DecimalField(max_digits=9, decimal_places=6)
     longitude = models.DecimalField(max_digits=9, decimal_places=6)
-    site = models.ForeignKey(Site, on_delete=models.CASCADE)
+    site = models.ForeignKey(Site, on_delete=models.SET_NULL, null=True, blank=True)
     battery = models.PositiveSmallIntegerField(validators=[MinValueValidator(0)])
     status = models.PositiveSmallIntegerField(choices=Choices.scooter_status_choices)
     device_status = models.PositiveSmallIntegerField(choices=Choices.scooter_status_choices, default=1)
@@ -304,7 +304,7 @@ class Scooter(models.Model):
         if ride:
             nearby.append(ride.scooter)
             return nearby
-        scooters = Scooter.objects.filter(is_operational=True)
+        scooters = Scooter.objects.filter(is_operational=True, site=user.profile.site)
         for scooter in scooters:
             if abs((scooter.latitude + scooter.longitude) - (Decimal(latitude) + Decimal(longitude))) < 2 * Decimal(
                     radius):

@@ -1,8 +1,7 @@
-from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 
 from accounts.models import Profile
-from scooter.models import Scooter, Ride, Announcement
+from scooter.models import Scooter, Ride, Announcement, Site
 
 
 # used in My State API
@@ -12,6 +11,11 @@ class ProfileSerializer(serializers.ModelSerializer):
     ride_id = serializers.SerializerMethodField()
     timer = serializers.SerializerMethodField()
     battery = serializers.SerializerMethodField()
+    site = serializers.SerializerMethodField()
+
+    def get_site(self, profile):
+        if profile.site is not None:
+            return profile.site.name
 
     def get_battery(self, profile):
         return self.battery
@@ -62,13 +66,14 @@ class ProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
             model = Profile
-            fields = ['is_riding', 'ride_is_verified', 'credit', 'ride_id', 'timer', 'battery']
+            fields = ['is_riding', 'ride_is_verified', 'credit', 'ride_id', 'timer', 'battery',
+                      'site', 'member_code', 'name']
 
 
 class ScooterSerializer(serializers.ModelSerializer):
     class Meta:
         model = Scooter
-        fields = ['device_code', 'latitude', 'longitude', 'battery', 'status']
+        fields = ['device_code', 'latitude', 'longitude', 'battery', 'status', 'type']
 
 
 class ScooterAnnounceSerializer(serializers.ModelSerializer):
@@ -92,3 +97,10 @@ class AnnounceSerializer(serializers.ModelSerializer):
             'time', 'latitude', 'longitude', 'battery', 'device_status',
             'gps_board_connected', 'gps_valid', 'ack_start', 'ack_end', 'alerted'
         ]
+
+
+class SiteSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Site
+        fields = ['id', 'name']

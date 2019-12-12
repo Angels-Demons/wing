@@ -18,8 +18,9 @@ class UserAdmin(admin.ModelAdmin):
 
 
 class ProfileAdmin(admin.ModelAdmin):
-    list_display = ('user', 'credit', '_current_ride', 'app_version', 'name', 'email', 'tariff', 'top_up', 'timestamp')
+    list_display = ('user', 'site', 'member_code', 'credit', '_current_ride', 'app_version', 'name', 'email', 'tariff', 'top_up', 'timestamp')
     search_fields = ('user__phone', 'app_version')
+    list_filter = ['site']
 
     def top_up(self, obj):
         try:

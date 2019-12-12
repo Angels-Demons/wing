@@ -9,7 +9,7 @@ from api import log
 from django.shortcuts import get_object_or_404, render
 from rest_framework.permissions import AllowAny
 
-from accounts.models import User, UserManager, create_profile
+from accounts.models import User
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -25,10 +25,10 @@ from rest_framework.status import (
 
 # from ride.models import Ride
 from api.my_http import my_get_object_or_404, my_get_object_or_return_404
-from scooter.Serializers import ScooterSerializer, ScooterAnnounceSerializer, ProfileSerializer,\
-    ScooterAnnounceSerializerFakeLocation, AnnounceSerializer
+from scooter.Serializers import ScooterSerializer, ScooterAnnounceSerializer, ProfileSerializer, \
+    ScooterAnnounceSerializerFakeLocation, AnnounceSerializer, SiteSerializer
 # from scooter import funcs
-from scooter.models import Scooter, Ride, Announcement, DeviceType, Status
+from scooter.models import Scooter, Ride, Announcement, DeviceType, Status, Site
 import logging
 from django.db.models import Q
 
@@ -223,20 +223,20 @@ def start_ride_mobile_api(request):
 
     if 'qr_info' in request.POST:
         # scooter = get_object_or_404(Scooter, qr_info=request.POST['qr_info'])
-        scooter = Scooter.objects.filter(qr_info=request.POST['qr_info']).first()
+        scooter = Scooter.objects.filter(qr_info=request.POST['qr_info'], site=user.profile.site).first()
         if scooter:
             return scooter.start_ride_atomic(user=user)
             # return scooter.start_ride(user=user)
     if 'device_code' in request.POST:
         # scooter = get_object_or_404(Scooter, device_code=request.POST['device_code'])
-        scooter = Scooter.objects.filter(device_code=request.POST['device_code']).first()
+        scooter = Scooter.objects.filter(device_code=request.POST['device_code'], site=user.profile.site).first()
         if scooter:
             return scooter.start_ride_atomic(user=user)
             # return scooter.start_ride(user=user)
         else:
             data = {
                 "message": "error: invalid QR or device code",
-                "message_fa": "خطا: کد تصویری یا کد دستگاه نامعتبر",
+                "message_fa": "خطا: کد تصویری/ کد دستگاه نامعتبر یا خارج سازمانی",
                 "code": 200,
                 "status": 404,
             }
@@ -341,8 +341,25 @@ def my_profile_api(request):
     if 'app_version' in request.POST:
         user.profile.app_version = request.POST['app_version']
         user.profile.save()
+
+    if 'site' and 'name' and 'code' in request.POST:
+        user.profile.site_id = request.POST['site']
+        user.profile.name = request.POST['name']
+        user.profile.member_code = request.POST['code']
+        user.profile.save()
+
     # return MyStateSerializer.make_my_state(user.profile)
     return Response(ProfileSerializer(user.profile).data)
+
+
+@csrf_exempt
+@api_view(["POST"])
+# @permission_classes((AllowAny,))
+def sites(request):
+    user = authenticate(request)
+    if not isinstance(user, User):
+        return user
+    return Response(SiteSerializer(Site.objects.all(), many=True).data)
 
 
 @login_required

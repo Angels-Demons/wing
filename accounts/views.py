@@ -1,6 +1,6 @@
 import random
 
-from accounts.models import User, create_profile, UserManager
+from accounts.models import User, create_profile
 from api import sms_send, sms
 from django.shortcuts import render
 from accounts import models
@@ -29,6 +29,11 @@ class RegisterView(APIView):
         password = random.randint(1000, 9999)
         print(password)
         phone = request.POST['phone']
+        if 'site' in request.POST:
+            site_id = request.POST['site']
+        else:
+            site_id = None
+
         user = User.objects.filter(phone=phone).first()
         if user:
             # print('user exists')
@@ -39,7 +44,7 @@ class RegisterView(APIView):
             user = manager.create_user(phone, password)
             # modify
             # you can set the tariff_id here
-            profile = create_profile(user)
+            profile = create_profile(user=user, site_id=site_id)
         # sms_send.send_sms(phone, password)
         sms.verify(phone, password)
 

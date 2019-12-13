@@ -34,7 +34,7 @@ class TopUpAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         if is_owner(request.user):
-            return super().get_queryset(request).filter(profile__site=request.user.owner.site)
+            return super().get_queryset(request).filter(admin=request.user)
         return super().get_queryset(request)
 
 

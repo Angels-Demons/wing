@@ -1,16 +1,31 @@
 import datetime
 
 from django.contrib import admin
+from django.contrib.auth.models import Group
 from django.urls import reverse
 from django.utils.html import format_html
 
 from scooter.models import Scooter, Site, Ride, Announcement, time_threshold
 
 
+def is_owner(user):
+    (owners_group, created) = Group.objects.get_or_create(name='owners')
+    if user in owners_group.user_set.all():
+        print("user is owner")
+        return True
+    print("user is not owner")
+    return False
+
+
 class AnnouncementAdmin(admin.ModelAdmin):
     list_display = ('scooter', 'ride', 'time', 'latitude', 'longitude', 'battery', 'device_status',
                     'gps_board_connected', 'gps_valid', 'ack_start', 'ack_end', 'alerted')
     search_fields = ['scooter__device_code']
+
+    def get_queryset(self, request):
+        if is_owner(request.user):
+            return super().get_queryset(request).filter(scooter__site=request.user.owner.site)
+        return super().get_queryset(request)
 
 
 class IsAliveFilter(admin.SimpleListFilter):
@@ -70,6 +85,11 @@ class ScooterAdmin(admin.ModelAdmin):
             return None
     _current_ride.allow_tags = True
 
+    def get_queryset(self, request):
+        if is_owner(request.user):
+            return super().get_queryset(request).filter(site=request.user.owner.site)
+        return super().get_queryset(request)
+
 
 def end_ride_manually(modeladmin, request, queryset):
     for ride in queryset:
@@ -106,6 +126,11 @@ class RideAdmin(admin.ModelAdmin):
 
     trajectory.allow_tags = True
     # trajectory.label = "trajectory"
+
+    def get_queryset(self, request):
+        if is_owner(request.user):
+            return super().get_queryset(request).filter(scooter__site=request.user.owner.site)
+        return super().get_queryset(request)
 
 
 admin.site.register(Scooter, ScooterAdmin)

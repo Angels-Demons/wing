@@ -1,7 +1,9 @@
 import random
 
+from django.db import transaction
+
 from accounts.models import User, create_profile
-from api import sms_send, sms
+from api import sms_send, sms, log
 from django.shortcuts import render
 from accounts import models
 from rest_framework import status
@@ -36,15 +38,22 @@ class RegisterView(APIView):
 
         user = User.objects.filter(phone=phone).first()
         if user:
-            # print('user exists')
+            try:
+                profile = user.profile
+            except Exception:
+                profile = create_profile(user=user, site_id=site_id)
             user.set_password(password)
             user.save()
         else:
-            # print('new user')
-            user = manager.create_user(phone, password)
-            # modify
-            # you can set the tariff_id here
-            profile = create_profile(user=user, site_id=site_id)
+            with transaction.atomic():
+                try:
+                    user = manager.create_user(phone, password)
+                    # modify
+                    # you can set the tariff_id here
+                    profile = create_profile(user=user, site_id=site_id)
+                except Exception:
+                    log.error("could not create user", request.user)
+
         # sms_send.send_sms(phone, password)
         sms.verify(phone, password)
 

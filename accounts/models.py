@@ -76,6 +76,7 @@ class UserManager(BaseUserManager):
         user = self.create_user(phone,
                                 password=password,
                                 is_staff=True)
+        return user
 
     def create_superuser(self, phone, password=None):
         user = self.create_user(phone,
@@ -83,6 +84,7 @@ class UserManager(BaseUserManager):
                                 is_staff=True,
                                 is_admin=True,
                                 is_superuser=True)
+        return user
 
 
 class User(AbstractBaseUser, PermissionsMixin):
@@ -152,3 +154,18 @@ class Profile(models.Model):
 
     def __str__(self):
         return self.name + ' ' + str(self.user.phone)
+
+
+class Owner(models.Model):
+    user = models.OneToOneField(User, on_delete=models.SET_NULL, null=True, related_name="owner")
+    creator = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name="creator")
+    site = models.ForeignKey("scooter.Site", on_delete=models.SET_NULL, null=True, blank=False)
+    name = models.CharField(max_length=255, unique=True)
+    phone = models.BigIntegerField(unique=True)
+    email = models.EmailField()
+    # credit = models.BigIntegerField(default=0, editable=False)
+    active = models.BooleanField(default=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name

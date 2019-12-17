@@ -37,6 +37,7 @@ ALLOWED_HOSTS = [
 # Application definition
 
 INSTALLED_APPS = [
+    "scout_apm.django",  # should be listed first
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -56,6 +57,11 @@ INSTALLED_APPS = [
     'fleet',
     # 'log_viewer',
 ]
+
+# Scout settings
+SCOUT_MONITOR = True
+SCOUT_KEY = "Cje8T2Zmtgnuvo3A8PQq"
+SCOUT_NAME = "Wing"
 
 # modify maybe : log viewer ===========================================================
 # LOG_VIEWER_FILES = ['logfile1', 'logfile2', ...]

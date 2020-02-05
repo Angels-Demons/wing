@@ -22,6 +22,7 @@ from scooter.models import check_for_unattached_scooters
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('accounts.urls')),
+    path('v1/', include('api.urls')),
     path('scooter/', include('scooter.urls')),
     path('zarinpal/', include('zarinpal.urls')),
     # path('websocket/', include('example.urls')),

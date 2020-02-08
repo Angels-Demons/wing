@@ -66,6 +66,7 @@ class OwnerAdmin(admin.ModelAdmin):
     search_fields = ['name', 'phone']
 
     list_filter = ['active', 'site']
+    raw_id_fields = ['site']
 
     def get_readonly_fields(self, request, obj=None):
         if obj:

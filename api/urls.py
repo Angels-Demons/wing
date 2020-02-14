@@ -6,6 +6,6 @@ from api.views import *
 
 urlpatterns = [
     path('', boosh, name='login'),
-    path('v2/', boosh2, name='login'),
+    path('mohi/', boosh2, name='login'),
     # path('sign/', sign, name='sign'),
 ]

@@ -1,0 +1,155 @@
+
+
+{% extends "admin/change_form.html" %}
+{% load i18n admin_static admin_modify %}
+{#{% load jalali_tags %}#}
+{% load static %}
+{% block content %}
+{#    <p>{{ request.user.date_joined|to_jalali:'%y/%m/%d _ %H:%M:%S' }}</p>#}
+{#    {% block admin_change_form_document_ready %}#}
+{#    <script type="text/javascript"#}
+{#            id="django-admin-form-add-constants"#}
+{#            src="{% static 'admin/js/change_form.js' %}"#}
+{#            {% if adminform and add %}#}
+{#                data-model-name="{{ opts.model_name }}"#}
+{#            {% endif %}>#}
+{#    </script>#}
+{#{% endblock %}#}
+
+    {% block field_sets %}
+{#    {% for fieldset in adminform %}#}
+{#        {% include "admin/includes/jalali_fieldset.html" %}#}
+{#    {% endfor %}#}
+    {% endblock %}
+
+{# JavaScript for prepopulated fields #}
+{#{% prepopulated_fields_js %}#}
+<div id="content-main">
+  <form action="../{{ url }}/" method="POST" novalidate>
+    {% csrf_token %}
+  {{ form.media }}
+    {% if form.non_field_errors|length > 0 %}
+      <p class="errornote">
+          "Please correct the errors below."
+      </p>
+      {{ form.non_field_errors }}
+    {% endif %}
+    <fieldset class="module aligned">
+      {% for field in form %}
+        <div class="form-row">
+            {% if field.field.required %}
+                <span class="required">*</span>
+            {% endif %}
+          {{ field.errors }}
+          {{ field.label_tag }}
+          {{ field }}
+          {% if field.field.help_text %}
+          <p class="help">
+            {{ field.field.help_text|safe }}
+          </p>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </fieldset>
+    <div class="submit-row">
+      <input type="submit" value="Confirm" />
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% if not is_popup %}
+{% block breadcrumbs %}
+    <div class="breadcrumbs">
+<a>{{ header }}</a> ->
+    <a>{{ title }}</a> ->
+    <a>{{ state }}</a>
+
+
+    </div>
+{#    <div class="breadcrumbs">#}
+{##}
+{#     <input type="button" value="htyjdj" />#}
+{#    </div>#}
+
+
+{% endblock %}
+{% endif %}
+
+
+{% block extrahead %}{{ block.super }}
+<script type="text/javascript" src="{% url 'admin:jsi18n' %}"></script>
+{{ media }}
+{#    <script src="jquery-3.3.1.min.js"></script>#}
+     <script src="{% static 'jquery-3.3.1.min.js' %}"></script>
+    <script>
+  //  $(document).ready(function(){
+   // $("#header").click(function(){
+
+        //$("h1").hide();
+    //});
+
+//});
+  $(document).ready(function(){
+    $("#id_province").change(function () {
+        console.log('listener called');
+      var url = $("#personForm").attr("data-cities-url");  // get the url of the `load_cities` view
+      var provinceId = $(this).val();  // get the selected province ID from the HTML input
+
+      $.ajax({                       // initialize an AJAX request
+        url: url,                    // set the url of the request (= localhost:8000/hr/ajax/load-cities/)
+        data: {
+          'province': provinceId       // add the province id to the GET parameters
+        },
+        success: function (data) {   // `data` is the return of the `load_cities` view function
+          $("#id_zone").html(data);  // replace the contents of the city input with the data that came from the server
+        }
+      });
+      console.log('after ajax');
+
+    });
+    $("#id_zone").change(function () {
+        console.log('listener called');
+      var url = $("#personForm").attr("data-cities-url");  // get the url of the `load_cities` view
+      var provinceId = $(this).val();  // get the selected province ID from the HTML input
+
+      $.ajax({                       // initialize an AJAX request
+        url: url,                    // set the url of the request (= localhost:8000/hr/ajax/load-cities/)
+        data: {
+          'zone': provinceId       // add the province id to the GET parameters
+        },
+        success: function (data) {   // `data` is the return of the `load_cities` view function
+          $("#id_region").html(data);  // replace the contents of the city input with the data that came from the server
+        }
+      });
+      console.log('after ajax');
+
+    });
+    $("#id_region").change(function () {
+        console.log('listener called');
+      var url = $("#personForm").attr("data-cities-url");  // get the url of the `load_cities` view
+      var provinceId = $(this).val();  // get the selected province ID from the HTML input
+
+      $.ajax({                       // initialize an AJAX request
+        url: url,                    // set the url of the request (= localhost:8000/hr/ajax/load-cities/)
+        data: {
+          'region': provinceId       // add the province id to the GET parameters
+        },
+        success: function (data) {   // `data` is the return of the `load_cities` view function
+          $("#id_city").html(data);  // replace the contents of the city input with the data that came from the server
+        }
+      });
+      console.log('after ajax');
+
+    });
+
+  });
+
+  </script>
+
+{% endblock %}
+
+
+
+
+

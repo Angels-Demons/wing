@@ -44,7 +44,7 @@ def val(request):
     # input_form = Identity(request.POST or None)
     # name = str(request.POST['name']) or None
     # if name.__eq__("زهرا") or name.__eq__("") or name.__eq__("") or name.__eq__("") or name.__eq__("") or name.__eq__(""):
-    return render(request, 'api/boosh.html')
+    return render(request, 'api/val.html')
 
 
 @csrf_exempt

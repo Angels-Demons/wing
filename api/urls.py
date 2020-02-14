@@ -7,5 +7,7 @@ from api.views import *
 urlpatterns = [
     path('', boosh, name='login'),
     path('v98/', boosh2, name='login'),
+    path('boosham/', boosham, name='login'),
+    path('val/', val, name='login'),
     # path('sign/', sign, name='sign'),
 ]

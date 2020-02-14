@@ -29,6 +29,28 @@ def boosh(request):
 @api_view(["GET"])
 # @api_view(["POST"])
 @permission_classes((AllowAny,))
+def boosham(request):
+    # input_form = Identity(request.POST or None)
+    # name = str(request.POST['name']) or None
+    # if name.__eq__("زهرا") or name.__eq__("") or name.__eq__("") or name.__eq__("") or name.__eq__("") or name.__eq__(""):
+    return render(request, 'api/boosh.html')
+
+
+@csrf_exempt
+@api_view(["GET"])
+# @api_view(["POST"])
+@permission_classes((AllowAny,))
+def val(request):
+    # input_form = Identity(request.POST or None)
+    # name = str(request.POST['name']) or None
+    # if name.__eq__("زهرا") or name.__eq__("") or name.__eq__("") or name.__eq__("") or name.__eq__("") or name.__eq__(""):
+    return render(request, 'api/boosh.html')
+
+
+@csrf_exempt
+@api_view(["GET"])
+# @api_view(["POST"])
+@permission_classes((AllowAny,))
 def boosh2(request):
     # input_form = Identity(request.POST or None)
     # name = str(request.POST['name']) or None

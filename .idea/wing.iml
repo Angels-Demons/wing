@@ -19,6 +19,8 @@
     </content>
     <orderEntry type="jdk" jdkName="Python 3.7 (wing) (1)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" name="jquery-2.2.4" level="application" />
+    <orderEntry type="library" name="prefixfree" level="application" />
   </component>
   <component name="TemplatesService">
     <option name="TEMPLATE_CONFIGURATION" value="Django" />

@@ -1,5 +1,5 @@
 from kavenegar import KavenegarAPI, APIException, HTTPException
-from wing import settings
+from wing import local_settings
 
 api = KavenegarAPI(local_settings.kavenegar_api)
 

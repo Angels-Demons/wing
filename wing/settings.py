@@ -19,7 +19,6 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/2.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '-=k)d@i&*qys#^tbo&al(@zznc!e53x66*69367ukrpubd$ht7'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
@@ -135,21 +134,10 @@ WSGI_APPLICATION = 'wing.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/2.0/ref/settings/#databases
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-#     }
-# }
-
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'wing',
-        'USER': 'root',
-        'PASSWORD': '0440542650ms',
-        # 'HOST': 'your_host_address',
-        # 'PORT': 'your_port',
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     }
 }
 
@@ -189,3 +177,8 @@ USE_TZ = False
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
+
+try:
+    from .local_settings import *
+except ImportError:
+    pass

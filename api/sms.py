@@ -1,6 +1,6 @@
 from kavenegar import KavenegarAPI, APIException, HTTPException
 
-api = KavenegarAPI('4C736572316E776B5752717A596F50774D4473746E694E4A5652734F786C7961')
+api = KavenegarAPI(local_settings.kavenegar_api)
 
 
 def verify(phone, password):

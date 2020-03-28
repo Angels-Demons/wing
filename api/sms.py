@@ -1,4 +1,5 @@
 from kavenegar import KavenegarAPI, APIException, HTTPException
+from trade import settings
 
 api = KavenegarAPI(local_settings.kavenegar_api)
 
